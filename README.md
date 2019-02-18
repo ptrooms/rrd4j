@@ -22,6 +22,11 @@ RRD4J 3.4 (released 2018-12-27) - [Download](https://github.com/rrd4j/rrd4j/rele
 RRD4J is built using Maven. The generated site is available [here](http://rrd4j.org/). Automated builds are uploaded
 to [Sonatype's repository](https://oss.sonatype.org/content/repositories/snapshots/org/rrd4j/rrd4j).
 
+
+Skip test using option: -Dmaven.test.skip
+	In case one does not have a functional database to connect for test or have a different timezone/calendars (summer/wintertime)
+
+
 ### Using with Maven
 
 Add this dependency to your project's POM file:

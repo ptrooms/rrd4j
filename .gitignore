@@ -1,0 +1,35 @@
+target/
+src-gen/
+xtend-gen/
+bin/
+bundles/io/org.openhab.io.multimedia.tts.marytts/lib/
+.antlr*
+.metadata/
+.DS_Store
+*/plugin.xml_gen
+
+distribution/openhabhome/logs/*.log
+distribution/openhabhome/*.zip
+distribution/openhabhome/etc/rrd4j/*.rrd
+*.xml_gen
+*.xml_gen
+*.orig
+*~
+features/*/src/main/history
+itemDump.txt
+
+# IntelliJ files
+**/.idea
+**/*.iml
+# ignore eclips
+# *.project
+# **/.settings/org.eclipse.core.resources.prefs
+# **/.settings/org.eclipse.m2e.core.prefs
+.vscode/
+.classpath
+.project
+.settings
+.idea
+.metadata
+*.iml
+*.ipr
