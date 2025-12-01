@@ -143,7 +143,7 @@ public class Archive implements RrdUpdater<Archive> {
             }
         }
         // update robin in bulk
-        int bulkUpdateCount = (int) Math.min(numUpdates / steps.get(), (long) rows.get());
+        int bulkUpdateCount = (int) Math.min(numUpdates / steps.get(), rows.get());
         robin.bulkStore(value, bulkUpdateCount);
         // update remaining steps
         long remainingUpdates = numUpdates % steps.get();
@@ -352,7 +352,7 @@ public class Archive implements RrdUpdater<Archive> {
         long startTime = getStartTime();
         for (int i = 0; i < rows.get(); i++) {
             long time = startTime + i * getArcStep();
-            writer.writeComment(Util.getDate(time) + " / " + time);
+            writer.writeComment(writer.formatTimestamp(time) + " / " + time);
             writer.startTag("row");
             for (Robin robin : robins) {
                 writer.writeTag("v", robin.getValue(i));

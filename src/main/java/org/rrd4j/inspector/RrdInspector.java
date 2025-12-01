@@ -3,8 +3,6 @@ package org.rrd4j.inspector;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -28,8 +26,6 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -54,26 +50,31 @@ public class RrdInspector extends JFrame {
     static final Dimension INFO_PANE_SIZE = new Dimension(450, 400);
 
     static final String ABOUT = "RRD4J\nRRD File Inspector\n" +
+<<<<<<< HEAD
             "Copyright (c) 2021-25 Peter Ooms, Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group,  Inc. Licensed under the Apache License, Version 2.0. ";
+=======
+            "Copyright (c) 2013-2022 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group, Inc. Licensed under the Apache License, Version 2.0.";
+>>>>>>> d7b991d6cec25b21e973406739f392843496da03
     private static final String JSCROLL_BAR_FAST_WHEEL_SCROLLING = "JScrollBar.fastWheelScrolling";
     private static final String OPEN_A_VALID_RRD_FILE_FIRST = "Open a valid RRD file first.";
     private static final String SELECT_ARCHIVE_FIRST = "Select archive first";
 
-    JTabbedPane tabbedPane = new JTabbedPane();
-    private JTree mainTree = new JTree();
-    private JSplitPane splitPane = new JSplitPane();
-    private JTable generalTable = new JTable();
-    private JTable datasourceTable = new JTable();
-    private JTable archiveTable = new JTable();
-    private JTable dataTable = new JTable();
+    final JTabbedPane tabbedPane = new JTabbedPane();
+    private final JTree mainTree = new JTree();
+    private final JSplitPane splitPane = new JSplitPane();
+    private final JTable generalTable = new JTable();
+    private final JTable datasourceTable = new JTable();
+    private final JTable archiveTable = new JTable();
+    private final JTable dataTable = new JTable();
 
-    private InspectorModel inspectorModel = new InspectorModel();
+    private final InspectorModel inspectorModel = new InspectorModel();
 
     private String lastDirectory = null;
 
     private RrdInspector(String path) throws Exception {
         super(TITLE);
 
+<<<<<<< HEAD
         /* ptrooms/dic/explain:
             SwingUtilities , Event Dispatch Thread (EDT). 
                 It is started as soon as a Swing top-level component is displayed, 
@@ -88,6 +89,11 @@ public class RrdInspector extends JFrame {
                 constructUI();
                 pack();
             }
+=======
+        SwingUtilities.invokeAndWait(() -> {
+            constructUI();
+            pack();
+>>>>>>> d7b991d6cec25b21e973406739f392843496da03
         });
 
         Util.placeWindow(this);
@@ -112,20 +118,12 @@ public class RrdInspector extends JFrame {
         toolBar.setFloatable(true);
 
         JButton openButton = new JButton(loadIcon("open-24.png"));
-        openButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                selectFile();
-            }
-        });
+        openButton.addActionListener(e -> selectFile());
         toolBar.add(openButton);
 
         final JButton plotButton = new JButton(loadIcon("graph-24.gif"));
         plotButton.setEnabled(false);
-        plotButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                plotArchive();
-            }
-        });
+        plotButton.addActionListener(e -> plotArchive());
         toolBar.add(plotButton);
 
         // tree pane
@@ -140,6 +138,7 @@ public class RrdInspector extends JFrame {
         splitPane.setOneTouchExpandable(true);
 
         mainTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+<<<<<<< HEAD
         // read [https://docs.oracle.com/javase/tutorial/uiswing/events/treeselectionlistener.html]
         mainTree.addTreeSelectionListener(new TreeSelectionListener() {         // note: this is a calling routine sequence
             public void valueChanged(TreeSelectionEvent e) {
@@ -147,6 +146,11 @@ public class RrdInspector extends JFrame {
                 System.out.println("ptrooms: addTreeSelectionListener.") ;
                 plotButton.setEnabled(isArchiveNode(getSelectedRrdNode()));
             }
+=======
+        mainTree.addTreeSelectionListener(e -> {
+            nodeChangedAction();
+            plotButton.setEnabled(isArchiveNode(getSelectedRrdNode()));
+>>>>>>> d7b991d6cec25b21e973406739f392843496da03
         });
         mainTree.setModel(inspectorModel.getMainTreeModel());
 
@@ -210,22 +214,16 @@ public class RrdInspector extends JFrame {
 
         // Open file
         JMenuItem fileMenuItem = new JMenuItem("Open RRD file...", KeyEvent.VK_O);
-        fileMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                selectFile();
-            }
-        });
+        fileMenuItem.addActionListener(e -> selectFile());
         fileMenu.add(fileMenuItem);
 
         // Open file in new window
         JMenuItem fileMenuItem2 = new JMenuItem("Open RRD file in new window...");
-        fileMenuItem2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    new RrdInspector(null);
-                } catch (Exception e1) {
+        fileMenuItem2.addActionListener(e -> {
+            try {
+                new RrdInspector(null);
+            } catch (Exception e1) {
 
-                }
             }
         });
         fileMenu.add(fileMenuItem2);
@@ -233,76 +231,44 @@ public class RrdInspector extends JFrame {
 
         // Add datasource
         JMenuItem addDatasourceMenuItem = new JMenuItem("Add datasource...");
-        addDatasourceMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                addDatasource();
-            }
-        });
+        addDatasourceMenuItem.addActionListener(e -> addDatasource());
         fileMenu.add(addDatasourceMenuItem);
 
         // Edit datasource
         JMenuItem editDatasourceMenuItem = new JMenuItem("Edit datasource...");
-        editDatasourceMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                editDatasource();
-            }
-        });
+        editDatasourceMenuItem.addActionListener(e -> editDatasource());
         fileMenu.add(editDatasourceMenuItem);
 
         // Remove datasource
         JMenuItem removeDatasourceMenuItem = new JMenuItem("Remove datasource");
-        removeDatasourceMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                removeDatasource();
-            }
-        });
+        removeDatasourceMenuItem.addActionListener(e -> removeDatasource());
         fileMenu.add(removeDatasourceMenuItem);
         fileMenu.addSeparator();
 
         // Add archive
         JMenuItem addArchiveMenuItem = new JMenuItem("Add archive...");
-        addArchiveMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                addArchive();
-            }
-        });
+        addArchiveMenuItem.addActionListener(e -> addArchive());
         fileMenu.add(addArchiveMenuItem);
 
         // Edit archive
         JMenuItem editArchiveMenuItem = new JMenuItem("Edit archive...");
-        editArchiveMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                editArchive();
-            }
-        });
+        editArchiveMenuItem.addActionListener(e -> editArchive());
         fileMenu.add(editArchiveMenuItem);
 
         // Remove archive
         JMenuItem removeArchiveMenuItem = new JMenuItem("Remove archive");
-        removeArchiveMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                removeArchive();
-            }
-        });
+        removeArchiveMenuItem.addActionListener(e -> removeArchive());
         fileMenu.add(removeArchiveMenuItem);
 
         // Plot archive values
         JMenuItem plotArchiveMenuItem = new JMenuItem("Plot archive values...");
-        plotArchiveMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                plotArchive();
-            }
-        });
+        plotArchiveMenuItem.addActionListener(e -> plotArchive());
         fileMenu.add(plotArchiveMenuItem);
         fileMenu.addSeparator();
 
         // Exit
         JMenuItem exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
-        exitMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
+        exitMenuItem.addActionListener(e -> System.exit(0));
         fileMenu.add(exitMenuItem);
 
         // HELP MENU
@@ -311,11 +277,7 @@ public class RrdInspector extends JFrame {
 
         // About
         JMenuItem aboutMenuItem = new JMenuItem("About...", KeyEvent.VK_A);
-        aboutMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                about();
-            }
-        });
+        aboutMenuItem.addActionListener(e -> about());
         helpMenu.add(aboutMenuItem);
 
         menuBar.add(fileMenu);
@@ -325,6 +287,7 @@ public class RrdInspector extends JFrame {
         // finalize UI
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
+            @Override
             public void windowClosing(WindowEvent e) {
                 closeWindow();
             }
@@ -401,8 +364,6 @@ public class RrdInspector extends JFrame {
             File file = chooser.getSelectedFile();
             if (file != null) {
                 lastDirectory = file.getParent();
-                //inspectorModel.setFile(file);
-                //tabbedPane.setSelectedIndex(0);
                 loadFile(file);
             }
         }
@@ -411,6 +372,7 @@ public class RrdInspector extends JFrame {
     private void loadFile(File file) {
         inspectorModel.setFile(file);
         tabbedPane.setSelectedIndex(0);
+        setTitle(String.format("%s - %s", file.getName(), TITLE));
     }
 
 
@@ -460,7 +422,7 @@ public class RrdInspector extends JFrame {
             return;
         }
         RrdNode rrdNode = getSelectedRrdNode();
-        int dsIndex = -1;
+        int dsIndex;
         if (rrdNode == null || (dsIndex = rrdNode.getDsIndex()) < 0) {
             Util.error(this, "Select datasource first");
             return;
@@ -492,7 +454,7 @@ public class RrdInspector extends JFrame {
             return;
         }
         RrdNode rrdNode = getSelectedRrdNode();
-        int arcIndex = -1;
+        int arcIndex;
         if (rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
             Util.error(this, SELECT_ARCHIVE_FIRST);
             return;
@@ -526,7 +488,7 @@ public class RrdInspector extends JFrame {
             return;
         }
         RrdNode rrdNode = getSelectedRrdNode();
-        int dsIndex = -1;
+        int dsIndex;
         if (rrdNode == null || (dsIndex = rrdNode.getDsIndex()) < 0) {
             Util.error(this, "Select datasource first");
             return;
@@ -551,7 +513,7 @@ public class RrdInspector extends JFrame {
             return;
         }
         RrdNode rrdNode = getSelectedRrdNode();
-        int arcIndex = -1;
+        int arcIndex;
         if (rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
             Util.error(this, SELECT_ARCHIVE_FIRST);
             return;
@@ -615,6 +577,7 @@ public class RrdInspector extends JFrame {
             printUsageAndExit();
         }
 
+<<<<<<< HEAD
         // Set look and feel  // 31mar21 ptro: (and place to set font)
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
@@ -634,6 +597,17 @@ public class RrdInspector extends JFrame {
                     } catch (Exception e2) {
                         // ignore
                     }
+=======
+        // Set look and feel
+        SwingUtilities.invokeAndWait(() -> {
+            try {
+                UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+            } catch (Exception e1) {
+                try {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                } catch (Exception e2) {
+                    // ignore
+>>>>>>> d7b991d6cec25b21e973406739f392843496da03
                 }
             }
         });

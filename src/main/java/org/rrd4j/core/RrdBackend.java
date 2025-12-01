@@ -239,8 +239,8 @@ public abstract class RrdBackend {
         int count = values.length;
         byte[] image = new byte[8 * count];
         int k = 0;
-        for (int i = 0; i < count; i++) {
-            byte[] b = getDoubleBytes(values[i]);
+        for (double value : values) {
+            byte[] b = getDoubleBytes(value);
             image[k++] = b[0];
             image[k++] = b[1];
             image[k++] = b[2];
@@ -339,10 +339,10 @@ public abstract class RrdBackend {
     /**
      * Extract a CharBuffer from the backend, used by readString
      * 
-     * @param offset
-     * @param size
-     * @return
-     * @throws IOException
+     * @param offset the offset in the rrd
+     * @param size the size of the buffer, in character
+     * @return a new CharBuffer
+     * @throws IOException if the read fails
      */
     protected CharBuffer getCharBuffer(long offset, int size) throws IOException {
         ByteBuffer bbuf = ByteBuffer.allocate(size * 2);

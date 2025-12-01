@@ -5,12 +5,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -48,12 +46,14 @@ class GraphFrame extends JFrame {
     private int deltaWidth = 0, deltaHeight = 0;
 
     private Color color = COLOR;
-    private GraphPanel graphPanel = new GraphPanel();
-    private JComboBox<GraphComboItem> graphCombo = new JComboBox<>();
+    private final GraphPanel graphPanel = new GraphPanel();
+    private final JComboBox<GraphComboItem> graphCombo = new JComboBox<>();
     private RrdGraph rrdGraph;
 
-    private String sourcePath;
+    private final String sourcePath;
     private int dsIndex, arcIndex;
+
+    private int counted = 0;
 
     GraphFrame(String sourcePath, int dsIndex, int arcIndex) {
         this.sourcePath = sourcePath;
@@ -75,35 +75,40 @@ class GraphFrame extends JFrame {
             double[] values;
             String dsName;
             long t1, t2;
-                Datasource ds = rrdDb.getDatasource(dsIndex);
-                Archive arc = rrdDb.getArchive(arcIndex);
-                Robin robin = arc.getRobin(dsIndex);
-                dsName = ds.getName();
-                t1 = arc.getStartTime();
-                t2 = arc.getEndTime();
-                long step = arc.getArcStep();
-                int count = robin.getSize();
-                timestamps = new long[count];
-                for (int i = 0; i < count; i++) {
-                    timestamps[i] = t1 + i * step;
-                }
-                values = robin.getValues();
-                rrdDef = rrdDb.getRrdDef();
-            RrdGraphDef rrdGraphDef = new RrdGraphDef();
-            rrdGraphDef.setTimeSpan(t1, t2);
+            Datasource ds = rrdDb.getDatasource(dsIndex);
+            Archive arc = rrdDb.getArchive(arcIndex);
+            Robin robin = arc.getRobin(dsIndex);
+            dsName = ds.getName();
+            t1 = arc.getStartTime();
+            t2 = arc.getEndTime();
+            long step = arc.getArcStep();
+            int count = robin.getSize();
+            timestamps = new long[count];
+            for (int i = 0; i < count; i++) {
+                timestamps[i] = t1 + i * step;
+            }
+            values = robin.getValues();
+            rrdDef = rrdDb.getRrdDef();
+            RrdGraphDef rrdGraphDef = new RrdGraphDef(t1, t2);
             rrdGraphDef.setImageFormat("png");
             rrdGraphDef.setTitle(rrdDef.getDsDefs()[dsIndex].dump() + " " +
                     rrdDef.getArcDefs()[arcIndex].dump());
             LinearInterpolator linearInterpolator = new LinearInterpolator(timestamps, values);
-            linearInterpolator.setInterpolationMethod(LinearInterpolator.Method.RIGHT);
+            linearInterpolator.setInterpolationMethod(LinearInterpolator.Method.LINEAR);
             rrdGraphDef.datasource(dsName, linearInterpolator);
             rrdGraphDef.area(dsName, color, dsName + "\\r");
             rrdGraphDef.comment("START: " + new Date(t1 * 1000L) + "\\r");
             rrdGraphDef.comment("END: " + new Date(t2 * 1000L) + "\\r");
+            rrdGraphDef.datasource("max", dsName, new Variable.MAX());
+            rrdGraphDef.datasource("min", dsName, new Variable.MIN());
+            rrdGraphDef.gprint("max", "%f");
+            rrdGraphDef.gprint("min", "%f");
             int width = graphPanel.getWidth(), height = graphPanel.getHeight();
             rrdGraphDef.setWidth(width + deltaWidth);
             rrdGraphDef.setHeight(height + deltaHeight);
+            rrdGraphDef.setFilename("/tmp/try" + counted++ + ".png");
             rrdGraph = new RrdGraph(rrdGraphDef);
+
             if (deltaWidth == 0 && deltaHeight == 0) {
                 RrdGraphInfo info = rrdGraph.getRrdGraphInfo();
                 deltaWidth = graphPanel.getWidth() - info.getWidth();
@@ -120,22 +125,22 @@ class GraphFrame extends JFrame {
 
     private void fillGraphCombo() {
         try (RrdDb rrdDb = RrdDb.getBuilder().setPath(sourcePath).readOnly().build()) {
-                RrdDef rrdDef = rrdDb.getRrdDef();
-                final DsDef[] dsDefs = rrdDef.getDsDefs();
-                final ArcDef[] arcDefs = rrdDef.getArcDefs();
-                GraphComboItem[] items = new GraphComboItem[rrdDef.getDsCount() * rrdDef.getArcCount()];
-                int selectedItem = -1;
-                for (int i = 0, k = 0; i < rrdDef.getDsCount(); i++) {
-                    for (int j = 0; j < rrdDef.getArcCount(); k++, j++) {
-                        String description = dsDefs[i].dump() + " " + arcDefs[j].dump();
-                        items[k] = new GraphComboItem(description, i, j);
-                        if (i == dsIndex && j == arcIndex) {
-                            selectedItem = k;
-                        }
+            RrdDef rrdDef = rrdDb.getRrdDef();
+            final DsDef[] dsDefs = rrdDef.getDsDefs();
+            final ArcDef[] arcDefs = rrdDef.getArcDefs();
+            GraphComboItem[] items = new GraphComboItem[rrdDef.getDsCount() * rrdDef.getArcCount()];
+            int selectedItem = -1;
+            for (int i = 0, k = 0; i < rrdDef.getDsCount(); i++) {
+                for (int j = 0; j < rrdDef.getArcCount(); k++, j++) {
+                    String description = dsDefs[i].dump() + " " + arcDefs[j].dump();
+                    items[k] = new GraphComboItem(description, i, j);
+                    if (i == dsIndex && j == arcIndex) {
+                        selectedItem = k;
                     }
                 }
-                graphCombo.setModel(new DefaultComboBoxModel<GraphComboItem>(items));
-                graphCombo.setSelectedIndex(selectedItem);
+            }
+            graphCombo.setModel(new DefaultComboBoxModel<>(items));
+            graphCombo.setSelectedIndex(selectedItem);
         } catch (Exception e) {
             Util.error(this, e);
         }
@@ -152,42 +157,34 @@ class GraphFrame extends JFrame {
         southPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         JButton colorButton = new JButton("Change graph color");
         southPanel.add(colorButton);
-        colorButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                changeColor();
-            }
-        });
+        colorButton.addActionListener(e -> changeColor());
         JButton saveButton = new JButton("Save graph");
-        saveButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                saveGraph();
-            }
-        });
+        saveButton.addActionListener(e -> saveGraph());
         southPanel.add(Box.createHorizontalStrut(3));
         southPanel.add(saveButton);
         content.add(southPanel, BorderLayout.SOUTH);
         // EVENT HANDLERS
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
+            @Override
             public void windowClosing(WindowEvent e) {
                 closeWindow();
             }
         });
         addComponentListener(new ComponentAdapter() {
+            @Override
             public void componentResized(ComponentEvent e) {
                 createRrdGraph();
                 graphPanel.repaint();
             }
         });
-        graphCombo.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    GraphComboItem item = (GraphComboItem) e.getItem();
-                    dsIndex = item.getDsIndex();
-                    arcIndex = item.getArcIndex();
-                    createRrdGraph();
-                    graphPanel.repaint();
-                }
+        graphCombo.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                GraphComboItem item = (GraphComboItem) e.getItem();
+                dsIndex = item.getDsIndex();
+                arcIndex = item.getArcIndex();
+                createRrdGraph();
+                graphPanel.repaint();
             }
         });
     }
@@ -198,12 +195,10 @@ class GraphFrame extends JFrame {
 
     private void changeColor() {
         final JColorChooser picker = new JColorChooser(color);
-        ActionListener okListener = new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                color = picker.getColor();
-                createRrdGraph();
-                repaint();
-            }
+        ActionListener okListener = e -> {
+            color = picker.getColor();
+            createRrdGraph();
+            repaint();
         };
         JColorChooser.createDialog(this, "Select color", true, picker, okListener, null).setVisible(true);
     }
@@ -241,12 +236,8 @@ class GraphFrame extends JFrame {
                 }
                 String absolutePath = selectedFile.getAbsolutePath();
                 byte[] data = rrdGraph.getRrdGraphInfo().getBytes();
-                RandomAccessFile f = new RandomAccessFile(absolutePath, "rw");
-                try {
+                try (RandomAccessFile f = new RandomAccessFile(absolutePath, "rw")) {
                     f.write(data);
-                }
-                finally {
-                    f.close();
                 }
             }
             catch (IOException e) {
@@ -256,14 +247,16 @@ class GraphFrame extends JFrame {
     }
 
     final class GraphPanel extends JPanel {
+        @Override
         public void paintComponent(Graphics g) {
             if (rrdGraph != null) rrdGraph.render(g);
         }
     }
 
-    class GraphComboItem {
-        private String description;
-        private int dsIndex, arcIndex;
+    static class GraphComboItem {
+        private final String description;
+        private final int dsIndex;
+        private final int arcIndex;
 
         GraphComboItem(String description, int dsIndex, int arcIndex) {
             this.description = description;

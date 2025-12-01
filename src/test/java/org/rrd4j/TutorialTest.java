@@ -11,8 +11,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.rrd4j.ConsolFun;
-import org.rrd4j.DsType;
 import org.rrd4j.core.FetchData;
 import org.rrd4j.core.FetchRequest;
 import org.rrd4j.core.RrdBackendFactory;
@@ -29,7 +27,7 @@ import org.rrd4j.graph.RrdGraphDef;
  * @author Fabrice Bacchella
  *
  */
-public class TutorialTest {
+public class TutorialTest extends GraphTester {
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -67,7 +65,7 @@ public class TutorialTest {
         rrdDef.addArchive(ConsolFun.AVERAGE, 0.5, 6, 10);
         try (RrdDb rrdDb = RrdDb.getBuilder().setRrdDef(rrdDef).build()) {
 
-        };
+        }
     }
 
     @Test
@@ -106,11 +104,11 @@ public class TutorialTest {
     @Test
     public void testCode4() throws IOException {
         testCode1();
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setTimeSpan(920804400L, 920808000L);
+        RrdGraphDef graphDef = new RrdGraphDef(920804400L, 920808000L);
         graphDef.datasource("myspeed", root + "/test.rrd", "speed", ConsolFun.AVERAGE);
         graphDef.line("myspeed", new Color(0xFF, 0, 0), null, 2);
         graphDef.setFilename(root + "/speed.gif");
+        saveGraph(graphDef, testFolder, "TutorialTest", "testCode4");
         RrdGraph graph = new RrdGraph(graphDef);
         BufferedImage bi = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
         graph.render(bi.getGraphics());
@@ -119,13 +117,12 @@ public class TutorialTest {
     @Test
     public void testCode5() throws IOException {
         testCode1();
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setTimeSpan(920804400L, 920808000L);
+        RrdGraphDef graphDef = new RrdGraphDef(920804400L, 920808000L);
         graphDef.setVerticalLabel("m/s");
         graphDef.datasource("myspeed", root + "/test.rrd", "speed", ConsolFun.AVERAGE);
         graphDef.datasource("realspeed", "myspeed,1000,*");
         graphDef.line("realspeed", new Color(0xFF, 0, 0), null, 2);
-        graphDef.setFilename(Paths.get(testFolder.getRoot().getAbsolutePath(), "speed2.gif").toString());
+        saveGraph(graphDef, testFolder, "TutorialTest", "testCode5");
         RrdGraph graph = new RrdGraph(graphDef);
         BufferedImage bi = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
         graph.render(bi.getGraphics());
@@ -134,8 +131,7 @@ public class TutorialTest {
     @Test
     public void testCode6() throws IOException {
         testCode1();
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setTimeSpan(920804400L, 920808000L);
+        RrdGraphDef graphDef = new RrdGraphDef(920804400L, 920808000L);
         graphDef.setVerticalLabel("km/h");
         graphDef.datasource("myspeed", root + "/test.rrd", "speed", ConsolFun.AVERAGE);
         graphDef.datasource("kmh", "myspeed,3600,*");
@@ -145,6 +141,7 @@ public class TutorialTest {
         graphDef.area("fast", new Color(0xFF, 0, 0), "Too fast");
         graphDef.hrule(100, new Color(0, 0, 0xFF), "Maximum allowed");
         graphDef.setFilename(root + "/speed3.gif");
+        saveGraph(graphDef, testFolder, "TutorialTest", "testCode6");
         RrdGraph graph = new RrdGraph(graphDef);
         BufferedImage bi = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
         graph.render(bi.getGraphics());
@@ -153,8 +150,7 @@ public class TutorialTest {
     @Test
     public void testCode7() throws IOException {
         testCode1();
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setTimeSpan(920804400L, 920808000L);
+        RrdGraphDef graphDef = new RrdGraphDef(920804400L, 920808000L);
         graphDef.setVerticalLabel("km/h");
         graphDef.datasource("myspeed", root + "/test.rrd", "speed", ConsolFun.AVERAGE);
         graphDef.datasource("kmh", "myspeed,3600,*");
@@ -166,6 +162,7 @@ public class TutorialTest {
         graphDef.stack("over", new Color(0xFF, 0, 0), "Over speed");
         graphDef.hrule(100, new Color(0, 0, 0xFF), "Maximum allowed");
         graphDef.setFilename(root + "/speed4.gif");
+        saveGraph(graphDef, testFolder, "TutorialTest", "testCode7");
         RrdGraph graph = new RrdGraph(graphDef);
         BufferedImage bi = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
         graph.render(bi.getGraphics());
@@ -208,16 +205,16 @@ public class TutorialTest {
     @Test
     public void testCode10() throws IOException {
         testCode9();
-        RrdGraphDef graphDef = new RrdGraphDef();
         long endTime = Util.getTime();
         long startTime = endTime - (24*60*60L);
-        graphDef.setTimeSpan(startTime, endTime);
+        RrdGraphDef graphDef = new RrdGraphDef(startTime, endTime);
         graphDef.datasource("inoctets", root + "/myrouter.rrd", "input", ConsolFun.AVERAGE);
         graphDef.datasource("outoctets", root + "/myrouter.rrd", "output", ConsolFun.AVERAGE);
         graphDef.area("inoctets", new Color(0, 0xFF, 0), "In traffic");
         graphDef.line("outoctets", new Color(0, 0, 0xFF), "Out traffic", 1);
         graphDef.setFilename(root + "myrouter-day.gif");
         BufferedImage bi = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
+        saveGraph(graphDef, testFolder, "TutorialTest", "testCode10");
         RrdGraph graph = new RrdGraph(graphDef);
         graph.render(bi.getGraphics());
     }
@@ -244,8 +241,7 @@ public class TutorialTest {
         sample.setAndUpdate("978303600:2700:4:600:2700");
         sample.setAndUpdate("978303900:3000:2:1200:3000");
         rrdDb.close();
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setTimeSpan(978300600L, 978304200L);
+        RrdGraphDef graphDef = new RrdGraphDef(978300600L, 978304200L);
         graphDef.datasource("linea", root + "/all.rrd", "a", ConsolFun.AVERAGE);
         graphDef.datasource("lineb", root + "/all.rrd", "b", ConsolFun.AVERAGE);
         graphDef.datasource("linec", root + "/all.rrd", "c", ConsolFun.AVERAGE);
@@ -257,6 +253,7 @@ public class TutorialTest {
         graphDef.setFilename(root + "all1.gif");
         graphDef.setWidth(400);
         graphDef.setHeight(400);
+        saveGraph(graphDef, testFolder, "TutorialTest", "testCode11");
         RrdGraph graph = new RrdGraph(graphDef);
         BufferedImage bim = new BufferedImage(400,400,BufferedImage.TYPE_INT_RGB);
         graph.render(bim.getGraphics());

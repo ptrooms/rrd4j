@@ -5,7 +5,6 @@ import org.rrd4j.core.DsDef;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
@@ -15,20 +14,20 @@ class EditDatasourceDialog extends JDialog {
     private static final String TITLE_NEW = "New datasource";
     private static final String TITLE_EDIT = "Edit datasource";
 
-    private JLabel nameLabel = new JLabel("Datasource name: ");
-    private JLabel typeLabel = new JLabel("Datasource type: ");
-    private JLabel heartbeatLabel = new JLabel("Heartbeat: ");
-    private JLabel minLabel = new JLabel("Min value: ");
-    private JLabel maxLabel = new JLabel("Max value: ");
+    private final JLabel nameLabel = new JLabel("Datasource name: ");
+    private final JLabel typeLabel = new JLabel("Datasource type: ");
+    private final JLabel heartbeatLabel = new JLabel("Heartbeat: ");
+    private final JLabel minLabel = new JLabel("Min value: ");
+    private final JLabel maxLabel = new JLabel("Max value: ");
 
-    private JTextField nameField = new JTextField(FIELD_SIZE);
-    private JComboBox<DsType> typeCombo = new JComboBox<>();
-    private JTextField heartbeatField = new JTextField(FIELD_SIZE);
-    private JTextField minField = new JTextField(FIELD_SIZE);
-    private JTextField maxField = new JTextField(FIELD_SIZE);
+    private final JTextField nameField = new JTextField(FIELD_SIZE);
+    private final JComboBox<DsType> typeCombo = new JComboBox<>();
+    private final JTextField heartbeatField = new JTextField(FIELD_SIZE);
+    private final JTextField minField = new JTextField(FIELD_SIZE);
+    private final JTextField maxField = new JTextField(FIELD_SIZE);
 
-    private JButton okButton = new JButton("OK");
-    private JButton cancelButton = new JButton("Cancel");
+    private final JButton okButton = new JButton("OK");
+    private final JButton cancelButton = new JButton("Cancel");
 
     private DsDef dsDef;
 
@@ -45,12 +44,9 @@ class EditDatasourceDialog extends JDialog {
      *
      * @return a {@link javax.swing.JRootPane} object.
      */
+    @Override
     protected JRootPane createRootPane() {
-        ActionListener actionListener = new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setVisible(false);
-            }
-        };
+        ActionListener actionListener = actionEvent -> setVisible(false);
         JRootPane rootPane = new JRootPane();
         KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
         rootPane.registerKeyboardAction(actionListener, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -129,16 +125,8 @@ class EditDatasourceDialog extends JDialog {
         getRootPane().setDefaultButton(okButton);
 
         // actions
-        okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ok();
-            }
-        });
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                cancel();
-            }
-        });
+        okButton.addActionListener(e -> ok());
+        cancelButton.addActionListener(e -> cancel());
 
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
     }

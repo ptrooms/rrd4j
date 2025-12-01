@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Base (abstract) backend factory class which holds references to all concrete
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
  *
  * Factory classes are used to create concrete {@link org.rrd4j.core.RrdBackend} implementations.
  * Each factory creates unlimited number of specific backend objects.
- *
+ * <p>
  * Rrd4j supports six different backend types (backend factories) out of the box:
  * <ul>
  * <li>{@link org.rrd4j.core.RrdRandomAccessFileBackend}: objects of this class are created from the
@@ -55,7 +56,7 @@ import java.util.regex.Pattern;
  * {@link org.rrd4j.core.RrdBerkeleyDbBackendFactory} class. It stores RRD data to ordinary disk files 
  * using <a href="http://www.oracle.com/technetwork/database/berkeleydb/overview/index-093405.html">Oracle Berkeley DB</a> Java Edition.
  * 
- * <li>{@link org.rrd4j.core.RrdMongoDBBackend}: objects of this class are created from the {@link org.rrd4j.core.RrdMongoDBBackendFactory} class.
+ * <li>{@link RrdMongoDBNewBackend}: objects of this class are created from the {@link RrdMongoDBNewBackendFactory} class.
  * It stores data in a {@link com.mongodb.DBCollection} from <a href="http://www.mongodb.org/">MongoDB</a>.
  * </ul>
  * <p>
@@ -93,7 +94,7 @@ public abstract class RrdBackendFactory implements Closeable {
             factories.put(safeFactory.name, safeFactory);
             defaultFactory = factories.get(DEFAULTFACTORY);
         }
-        private static RrdBackendFactory defaultFactory;
+        private static final RrdBackendFactory defaultFactory;
     }
 
     /**
@@ -216,6 +217,15 @@ public abstract class RrdBackendFactory implements Closeable {
         activeFactories.clear();
         activeFactories.addAll(Arrays.asList(newFactories));
     }
+    
+    /**
+     * Return the current active factories as a stream.
+     * @return the Stream
+     * @since 3.7
+     */
+    public static synchronized Stream<RrdBackendFactory> getActiveFactories() {
+        return activeFactories.stream();
+    }
 
     /**
      * Add factories to the list of active factories, i.e. the factory used to resolve URI.
@@ -262,10 +272,10 @@ public abstract class RrdBackendFactory implements Closeable {
     private static final Pattern URIPATTERN = Pattern.compile("^(?:(?<scheme>[a-zA-Z][a-zA-Z0-9+-\\.]*):)?(?://(?<authority>[^/\\?#]*))?(?<path>[^\\?#]*)(?:\\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$");
 
     /**
-     * Try to detect an URI from a path. It's needed because of windows path that look's like an URI
+     * Try to detect an URI from a path. It's needed because of Microsoft Windows path that look's like an URI
      * and to URL-encode the path.
      * 
-     * @param rrdpath
+     * @param rrdpath a file URI that can be a Windows path
      * @return an URI
      */
     public static URI buildGenericUri(String rrdpath) {
@@ -306,10 +316,7 @@ public abstract class RrdBackendFactory implements Closeable {
         }
         @Override
         public void clear() {
-            try {
-                backend.close();
-            } catch (IOException e) {
-            }
+            // backend doesn't need to be closed here as it already happens in RrdBackend.rrdClose()
             backend = null;
             super.clear();
         }
@@ -386,9 +393,9 @@ public abstract class RrdBackendFactory implements Closeable {
      * <li>query and fragment is kept as is.
      * </ul>
      * 
-     * @param rootUri
-     * @param uri
-     * @param relative
+     * @param rootUri the URI to match against
+     * @param uri an URI that the current backend can handle.
+     * @param relative if true, return an URI relative to the {@code rootUri}
      * @return a calculate normalized absolute URI or null if the tried URL don't match against the root.
      */
     protected URI resolve(URI rootUri, URI uri, boolean relative) {
@@ -448,8 +455,8 @@ public abstract class RrdBackendFactory implements Closeable {
     /**
      * Transform an path in a valid URI for this backend.
      * 
-     * @param path
-     * @return
+     * @param path a path local to the current backend.
+     * @return an URI that the current backend can handle.
      */
     public URI getUri(String path) {
         URI rootUri = getRootUri();
@@ -537,10 +544,9 @@ public abstract class RrdBackendFactory implements Closeable {
      * Determines if the header should be validated.
      *
      * @param path Storage path
-     * @throws java.io.IOException if header validation fails
      * @return a boolean.
      */
-    protected boolean shouldValidateHeader(String path) throws IOException {
+    protected boolean shouldValidateHeader(String path) {
         return validateHeader;
     }
 
@@ -548,10 +554,9 @@ public abstract class RrdBackendFactory implements Closeable {
      * Determines if the header should be validated.
      *
      * @param uri Storage URI
-     * @throws java.io.IOException if header validation fails
      * @return a boolean.
      */
-    protected boolean shouldValidateHeader(URI uri) throws IOException {
+    protected boolean shouldValidateHeader(URI uri) {
         return shouldValidateHeader(getPath(uri));
     }
 
@@ -567,7 +572,7 @@ public abstract class RrdBackendFactory implements Closeable {
     /**
      * A generic close handle, default implementation does nothing.
      * @since 3.4
-     * @throws IOException
+     * @throws IOException if the close fails
      */
     public void close() throws IOException {
 

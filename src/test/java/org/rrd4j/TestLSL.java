@@ -29,7 +29,7 @@ import org.rrd4j.graph.RrdGraphConstants;
 import org.rrd4j.graph.RrdGraphDef;
 import org.rrd4j.graph.RrdGraphInfo;
 
-public class TestLSL {
+public class TestLSL extends GraphTester {
     static final long START = getTimestamp(2010, 3, 1, 0, 0);
     static final long LASTWEEK = getTimestamp(2010, 3, 25, 23, 59);
     static final long END = getTimestamp(2010, 3, 30, 23, 59);
@@ -41,7 +41,7 @@ public class TestLSL {
 
     static private final class GaugeSource {
         private double value;
-        private double step;
+        private final double step;
 
         GaugeSource(double value, double step) {
             this.value = value;
@@ -91,7 +91,7 @@ public class TestLSL {
         rrdDef.addArchive(AVERAGE, 0.5, 1, 600);
         rrdDef.addArchive(AVERAGE, 0.5, 6, 700);
         rrdDef.addArchive(AVERAGE, 0.5, 24, 775);
-        RrdDb rrdDb = new RrdDb(rrdDef);
+        RrdDb rrdDb = RrdDb.of(rrdDef);
 
         long t = START;
         Sample sample = rrdDb.createSample();
@@ -107,12 +107,10 @@ public class TestLSL {
         FetchRequest week = rrdDb.createFetchRequest(ConsolFun.AVERAGE, LASTWEEK, END);
         FetchRequest month = rrdDb.createFetchRequest(ConsolFun.AVERAGE, START, END);
 
-        RrdGraphDef gdef = new RrdGraphDef();
+        RrdGraphDef gdef = new RrdGraphDef(LASTWEEK, END);
         gdef.setLocale(Locale.US);
         gdef.setTimeZone(TimeZone.getTimeZone("CET"));
         gdef.setFilename(testFolder.newFile("trend.png").getCanonicalPath());
-        gdef.setStartTime(LASTWEEK);
-        gdef.setEndTime(END);
         gdef.setImageFormat("png");
         gdef.setTitle("Disk Usage Prediction: /");                              //--title="Disk Usage Prediction: {ns-dskPath}"
         gdef.setWidth(620);                                                     //--width 620
@@ -164,11 +162,12 @@ public class TestLSL {
         gdef.print("maxabc2", "  Reach  100%% at %tc ", true);                 //GPRINT:maxabc2:"  Reach 100% at %c ":strftime
         gdef.print("maxabc3", "  Reach  100%% at %tc\\l", true);               //GPRINT:maxabc3:"  Reach 100% at %c "\\n:strftime
 
+        saveGraph(gdef, testFolder, "TestLSL", "test1");
         RrdGraph graph = new RrdGraph(gdef);
         RrdGraphInfo graphinfo = graph.getRrdGraphInfo();
         String[] lines = graphinfo.getPrintLines();
         Assert.assertEquals("  Reach   90% at Wed Apr 28 10:30:00 CEST 2010 ", lines[0]);
-        Assert.assertEquals("  Reach   90% at Wed Apr 28 11:00:00 CEST 2010", lines[1]);
+        Assert.assertEquals("  Reach   90% at Wed Apr 28 10:30:00 CEST 2010", lines[1]);
         Assert.assertEquals("  Reach  100% at Sat May 01 00:00:00 CEST 2010 ", lines[2]);
         Assert.assertEquals("  Reach  100% at Sat May 01 00:00:00 CEST 2010", lines[3]);
         rrdDb.close();

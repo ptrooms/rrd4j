@@ -27,10 +27,10 @@ public class LongRunning {
     private long now;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         now = System.currentTimeMillis();
 
-        startTimes = new ArrayList<Long>();
+        startTimes = new ArrayList<>();
         startTimes.add(now - (TimeUnit.HOURS).toMillis(1));
         startTimes.add(now - (TimeUnit.DAYS).toMillis(1));
         startTimes.add(now - (TimeUnit.DAYS).toMillis(7));
@@ -47,8 +47,7 @@ public class LongRunning {
             Long sampleTime = startTime;
             int sampleSize = (int) ((now - startTime) / (RRD_STEP * 1000));
 
-            RrdDb rrdDb = buildRrdDb(version, startTime, sampleSize);
-            try {
+            try (RrdDb rrdDb = buildRrdDb(version, startTime, sampleSize)) {
                 Sample sample = rrdDb.createSample();
                 for (int i = 1; i <= sampleSize; i++) {
                     int randomQueryResponseTime = random.nextInt(max - min + 1) + min; // in ms
@@ -59,8 +58,6 @@ public class LongRunning {
                     // Increment by RRD step
                     sampleTime += RRD_STEP;
                 }
-            } finally {
-                rrdDb.close();
             }
         }
     }

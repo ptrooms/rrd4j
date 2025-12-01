@@ -1,19 +1,20 @@
 package org.rrd4j;
 
-import static org.rrd4j.ConsolFun.AVERAGE;
-import static org.rrd4j.ConsolFun.MAX;
-import static org.rrd4j.DsType.GAUGE;
-
-import java.awt.Color;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
+
+import javax.imageio.ImageIO;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -33,16 +34,21 @@ import org.rrd4j.graph.ElementsNames;
 import org.rrd4j.graph.RrdGraph;
 import org.rrd4j.graph.RrdGraphDef;
 import org.rrd4j.graph.RrdGraphInfo;
+import org.rrd4j.graph.SVGImageWorker;
 import org.rrd4j.graph.TimeLabelFormat;
 
 import eu.bengreen.data.utility.LargestTriangleThreeBuckets;
 
-public class TestDemo {
+import static org.rrd4j.ConsolFun.AVERAGE;
+import static org.rrd4j.ConsolFun.MAX;
+import static org.rrd4j.DsType.GAUGE;
+
+public class TestDemo extends GraphTester {
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
 
-    static private RrdBackendFactory previousBackend;
+    private static RrdBackendFactory previousBackend;
 
     static final long SEED = 1909752002L;
     static final Random RANDOM = new Random(SEED);
@@ -53,12 +59,12 @@ public class TestDemo {
     static {
         Calendar c1 = new GregorianCalendar(TimeZone.getTimeZone("CET"), Locale.US);
         c1.setTimeInMillis(0);
-        c1.set(2010, 4, 1, 0, 0, 0);
+        c1.set(2010, Calendar.MAY, 1, 0, 0, 0);
         START = Util.getTimestamp(c1);
 
         Calendar c2 = new GregorianCalendar(TimeZone.getTimeZone("CET"), Locale.US);
         c2.setTimeInMillis(0);
-        c2.set(2010, 6, 1, 0, 0, 0);
+        c2.set(2010, Calendar.JULY, 1, 0, 0, 0);
         END = Util.getTimestamp(c2);
     }
 
@@ -78,84 +84,13 @@ public class TestDemo {
         RrdBackendFactory.setActiveFactories(previousBackend);
     }
 
-    @Test
-    public void main() throws IOException {
-        long start = START;
-        long end = END;
-
-        String rrdPath = testFolder.getRoot().getCanonicalPath() + "FILE" + ".rrd";
-        String xmlPath = testFolder.getRoot().getCanonicalPath() + "FILE" + ".xml";
-        String rrdRestoredPath = testFolder.getRoot().getCanonicalPath() + "FILE" + "_restored.rrd";
-        String imgPath = testFolder.getRoot().getCanonicalPath() + "FILE" + ".png";
-        String logPath = testFolder.getRoot().getCanonicalPath() + "FILE" + ".log";
-        PrintWriter log = new PrintWriter(new BufferedOutputStream(new FileOutputStream(logPath, false)));
-        // creation
-
-        RrdDef rrdDef = new RrdDef(rrdPath, start - 1, 300);
-        rrdDef.setVersion(2);
-        rrdDef.addDatasource("sun", GAUGE, 600, 0, Double.NaN);
-        rrdDef.addDatasource("shade", GAUGE, 600, 0, Double.NaN);
-        rrdDef.addArchive(AVERAGE, 0.5, 1, 600);
-        rrdDef.addArchive(AVERAGE, 0.5, 6, 700);
-        rrdDef.addArchive(AVERAGE, 0.5, 24, 775);
-        rrdDef.addArchive(AVERAGE, 0.5, 288, 797);
-        rrdDef.addArchive(MAX, 0.5, 1, 600);
-        rrdDef.addArchive(MAX, 0.5, 6, 700);
-        rrdDef.addArchive(MAX, 0.5, 24, 775);
-        rrdDef.addArchive(MAX, 0.5, 288, 797);
-
-        log.println(rrdDef.dump());
-
-        RrdDb rrdDb = RrdDb.of(rrdDef);
-
-        Assert.assertTrue(rrdDb.getRrdDef().equals(rrdDef));
-        rrdDb.close();
-
-
-        // update database
-        GaugeSource sunSource = new GaugeSource(1200, 20);
-        GaugeSource shadeSource = new GaugeSource(300, 10);
-
-        long t = start;
-        rrdDb = RrdDb.of(rrdPath);
-        Sample sample = rrdDb.createSample();
-
-        while (t <= end + 172800L) {
-            sample.setTime(t);
-            sample.setValue("sun", sunSource.getValue());
-            sample.setValue("shade", shadeSource.getValue());
-            log.println(sample.dump());
-            sample.update();
-            t += RANDOM.nextDouble() * MAX_STEP + 1;
-        }
-        rrdDb.close();
-
-        // test read-only access!
-        rrdDb = RrdDb.getBuilder().setPath(rrdPath).readOnly().build();
-        Calendar c = new GregorianCalendar(TimeZone.getTimeZone("CET"), Locale.US);
-        c.setTimeInMillis(rrdDb.getLastUpdateTime() * 1000);
-
-        // fetch data
-        FetchRequest request = rrdDb.createFetchRequest(AVERAGE, start, end);
-        log.println(request.dump());
-
-        // dump to XML file
-        rrdDb.exportXml(xmlPath);
-        RrdDb rrdRestoredDb = RrdDb.getBuilder().setPath(rrdRestoredPath).setExternalPath(xmlPath).build();
-
-        // close files
-        rrdDb.close();
-        rrdRestoredDb.close();
-
+    private void generateGraph(long start, long end, String rrdRestoredPath, String format) throws IOException {
         // create graph
-        RrdGraphDef gDef = new RrdGraphDef();
+        RrdGraphDef gDef = new RrdGraphDef(start, end);
         gDef.setLocale(Locale.US);
         gDef.setTimeZone(TimeZone.getTimeZone("CET"));
         gDef.setWidth(IMG_WIDTH);
         gDef.setHeight(IMG_HEIGHT);
-        gDef.setFilename(imgPath);
-        gDef.setStartTime(start);
-        gDef.setEndTime(end);
         gDef.setTitle("Temperatures in May-June 2010");
         gDef.setVerticalLabel("temperature");
         gDef.setColor(ElementsNames.xaxis, Color.BLUE);
@@ -199,11 +134,16 @@ public class TestDemo {
 
         gDef.setImageInfo("<img src='%s' width='%d' height = '%d'>");
         gDef.setPoolUsed(false);
-        gDef.setImageFormat("png");
+        gDef.setImageFormat(format);
+        Path imgPath = saveGraph(gDef, testFolder, "TestDemo", "runDemo", format);
+
+        RrdGraph graph;
         // create graph finally
-        RrdGraph graph = new RrdGraph(gDef);
-        // demo ends
-        log.close();
+        if ("svg".equals(format)) {
+            graph = new RrdGraph(gDef, new SVGImageWorker());
+        } else {
+            graph = new RrdGraph(gDef);
+        }
 
         RrdGraphInfo graphinfo = graph.getRrdGraphInfo();
         String[] lines = graphinfo.getPrintLines();
@@ -212,17 +152,96 @@ public class TestDemo {
         Assert.assertEquals("avgSun = 3.000k", lines[2]);
         Assert.assertEquals("maxShade = 0.878k", lines[3]);
         Assert.assertEquals("avgShade = 0.404k", lines[4]);
-        Assert.assertEquals(412, graphinfo.getHeight());
-        Assert.assertEquals(591, graphinfo.getWidth());
-        Assert.assertTrue(graphinfo.getFilename().endsWith(".png"));
+        Assert.assertTrue(graphinfo.getHeight() > 410 && graphinfo.getHeight() < 425);
+        Assert.assertTrue(graphinfo.getWidth() >= 591 && graphinfo.getWidth() <= 600);
+        Assert.assertTrue(graphinfo.getFilename().endsWith(imgPath.getFileName().toString()));
 
         Assert.assertEquals(1277467200, sunmax.getValue().timestamp);
         Assert.assertEquals(4284.9218056, sunmax.getValue().value, 1e-15);
+
+        BufferedImage img = ImageIO.read(new File(graphinfo.getFilename()));
+        Assert.assertEquals(graphinfo.getHeight(), img.getHeight());
+        Assert.assertEquals(graphinfo.getWidth(), img.getWidth());
+    }
+
+    @Test
+    public void runDemo() throws IOException {
+        long start = START;
+        long end = END;
+
+        Path testDirectory = resolveTestsPath(testFolder, "TestDemo");
+        String rrdPath = testDirectory.resolve(FILE + ".rrd").toString();
+        String xmlPath = testDirectory.resolve(FILE + ".xml").toString();
+        String rrdRestoredPath = testDirectory.resolve(FILE + "_restored.rrd").toString();
+        String logPath = testDirectory.resolve(FILE + ".log").toString();
+        PrintWriter log = new PrintWriter(new BufferedOutputStream(new FileOutputStream(logPath, false)));
+
+        // creation
+        RrdDef rrdDef = new RrdDef(rrdPath, start - 1, 300);
+        rrdDef.setVersion(2);
+        rrdDef.addDatasource("sun", GAUGE, 600, 0, Double.NaN);
+        rrdDef.addDatasource("shade", GAUGE, 600, 0, Double.NaN);
+        rrdDef.addArchive(AVERAGE, 0.5, 1, 600);
+        rrdDef.addArchive(AVERAGE, 0.5, 6, 700);
+        rrdDef.addArchive(AVERAGE, 0.5, 24, 775);
+        rrdDef.addArchive(AVERAGE, 0.5, 288, 797);
+        rrdDef.addArchive(MAX, 0.5, 1, 600);
+        rrdDef.addArchive(MAX, 0.5, 6, 700);
+        rrdDef.addArchive(MAX, 0.5, 24, 775);
+        rrdDef.addArchive(MAX, 0.5, 288, 797);
+
+        log.println(rrdDef.dump());
+
+        RrdDb rrdDb = RrdDb.of(rrdDef);
+
+        Assert.assertEquals(rrdDb.getRrdDef(), rrdDef);
+        rrdDb.close();
+
+
+        // update database
+        GaugeSource sunSource = new GaugeSource(1200, 20);
+        GaugeSource shadeSource = new GaugeSource(300, 10);
+
+        long t = start;
+        rrdDb = RrdDb.of(rrdPath);
+        Sample sample = rrdDb.createSample();
+
+        while (t <= end + 172800L) {
+            sample.setTime(t);
+            sample.setValue("sun", sunSource.getValue());
+            sample.setValue("shade", shadeSource.getValue());
+            log.println(sample.dump());
+            sample.update();
+            t += (long)(RANDOM.nextDouble() * MAX_STEP + 1);
+        }
+        rrdDb.close();
+
+        // test read-only access!
+        rrdDb = RrdDb.getBuilder().setPath(rrdPath).readOnly().build();
+        Calendar c = new GregorianCalendar(TimeZone.getTimeZone("CET"), Locale.US);
+        c.setTimeInMillis(rrdDb.getLastUpdateTime() * 1000);
+
+        // fetch data
+        FetchRequest request = rrdDb.createFetchRequest(AVERAGE, start, end);
+        log.println(request.dump());
+
+        // dump to XML file
+        rrdDb.exportXml(xmlPath);
+        RrdDb rrdRestoredDb = RrdDb.getBuilder().setPath(rrdRestoredPath).setExternalPath(xmlPath).build();
+
+        generateGraph(start, end, rrdRestoredPath, "png");
+        generateGraph(start, end, rrdRestoredPath, "svg");
+        // demo ends
+        log.close();
+
+        // close files
+        rrdDb.close();
+        rrdRestoredDb.close();
     }
 
     static class GaugeSource {
         private double value;
-        private double step;
+        private final double step;
 
         GaugeSource(double value, double step) {
             this.value = value;

@@ -47,15 +47,14 @@ public class ImageWriterTest {
     }
 
     private void run(File destination, String type) throws IOException {
-        //The first writer is arbitratry choosen
+        // The first writer is arbitrary chosen
         Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(type);
         ImageWriter writer = iter.next();
-        ImageWorker iw = new ImageWorker(100, 100);
         ImageWriteParam iwp = writer.getDefaultWriteParam();
-        int count = iw.saveImage(destination.getCanonicalPath(), writer, iwp).available();
+        BufferedImageWorker iw = BufferedImageWorker.getBuilder().setHeight(100).setWidth(100).setImageWriteParam(iwp).setWriter(writer).build();
+        iw.saveImage(destination.getCanonicalPath());
         writer.dispose();
         Assert.assertTrue(destination.exists());
-        Assert.assertEquals(destination.length(), count);
         ImageReader reader = ImageIO.getImageReader(writer);
         reader.setInput(new FileImageInputStream(destination));
         BufferedImage img = reader.read(0);

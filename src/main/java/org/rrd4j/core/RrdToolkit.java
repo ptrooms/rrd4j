@@ -1,17 +1,17 @@
 package org.rrd4j.core;
 
-import org.rrd4j.ConsolFun;
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.rrd4j.ConsolFun;
 
 /**
  * Class used to perform various complex operations on RRD files. Use an instance of the
@@ -31,7 +31,6 @@ import java.util.List;
  * (files which are currently in use).
  *
  */
-@SuppressWarnings("deprecation")
 public class RrdToolkit {
 
     private static final String SOURCE_AND_DESTINATION_PATHS_ARE_THE_SAME = "Source and destination paths are the same";
@@ -323,28 +322,14 @@ public class RrdToolkit {
 
     private static void copyFile(String sourcePath, String destPath, boolean saveBackup)
             throws IOException {
-        File source = new File(sourcePath);
-        File dest = new File(destPath);
+        
+        Path source = Paths.get(sourcePath);
+        Path destination = Paths.get(destPath);
         if (saveBackup) {
             String backupPath = getBackupPath(destPath);
-            File backup = new File(backupPath);
-            deleteFile(backup);
-            if (!dest.renameTo(backup)) {
-                throw new RrdException("Could not create backup file " + backupPath);
-            }
+            Files.move(destination, Paths.get(backupPath), StandardCopyOption.REPLACE_EXISTING);
         }
-        deleteFile(dest);
-        if (!source.renameTo(dest)) {
-            //Rename failed so try to copy and erase
-            try(FileChannel sourceStream = new FileInputStream(source).getChannel(); FileChannel destinationStream = new FileOutputStream(dest).getChannel()) {
-                long count = 0;
-                final long size = sourceStream.size();
-                while(count < size) {
-                    count += destinationStream.transferFrom(sourceStream, count, size-count);
-                }
-                deleteFile(source);
-            }
-        }
+        Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private static String getBackupPath(String destPath) {
@@ -486,11 +471,8 @@ public class RrdToolkit {
             if (arcDef.getRows() != newRows) {
                 arcDef.setRows(newRows);
                 rrdDef.setPath(destPath);
-                RrdDb rrdDest = new RrdDb(rrdDef);
-                try {
+                try (RrdDb rrdDest = RrdDb.of(rrdDef)){
                     rrdSource.copyStateTo(rrdDest);
-                } finally {
-                    rrdDest.close();
                 }
             }
         }
@@ -513,12 +495,6 @@ public class RrdToolkit {
         String destPath = Util.getTmpFilename();
         resizeArchive(sourcePath, destPath, consolFun, numSteps, newRows);
         copyFile(destPath, sourcePath, saveBackup);
-    }
-
-    private static void deleteFile(File file) throws IOException {
-        if (file.exists()) {
-            Files.delete(file.toPath());
-        }
     }
 
     /**
@@ -564,7 +540,7 @@ public class RrdToolkit {
         }
         List<String> fileList = new LinkedList<>();
         traverseDirectory(new File(directory), extension, resursive, fileList);
-        String[] result = fileList.toArray(new String[fileList.size()]);
+        String[] result = fileList.toArray(new String[0]);
         Arrays.sort(result);
         return result;
     }
@@ -591,4 +567,3 @@ public class RrdToolkit {
     }
 
 }
-

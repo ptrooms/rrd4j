@@ -26,10 +26,12 @@ class PrintText extends CommentText {
         this.strftime = strftime;
     }
 
+    @Override
     boolean isPrint() {
         return !includedInGraph;
     }
 
+    @Override
     void resolveText(Locale l, DataProcessor dproc, ValueScaler valueScaler) {
         super.resolveText(l, dproc, valueScaler);
         Value v = dproc.getVariable(srcName);
@@ -45,7 +47,7 @@ class PrintText extends CommentText {
                     resolvedText = String.format(l, resolvedText, c);
                 } catch (Exception e) {
                     throw new RuntimeException("can't format '" + resolvedText + "'", e);
-                }                
+                }
             }
             else {
                 resolvedText = "-";

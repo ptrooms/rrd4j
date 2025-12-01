@@ -23,18 +23,19 @@ public class Header implements RrdUpdater<Header> {
     static final String RRDTOOL_VERSION3 = "0003";
     private static final String[] VERSIONS = {"version 0.1", "version 0.2"};
 
-    private RrdDb parentDb;
+    private final RrdDb parentDb;
     private int version = -1;
 
-    private RrdString<Header> signature;
-    private RrdLong<Header> step;
-    private RrdInt<Header> dsCount, arcCount;
-    private RrdLong<Header> lastUpdateTime;
+    private final RrdString<Header> signature;
+    private final RrdLong<Header> step;
+    private final RrdInt<Header> dsCount;
+    private final RrdInt<Header> arcCount;
+    private final RrdLong<Header> lastUpdateTime;
 
     Header(RrdDb parentDb, RrdDef rrdDef) throws IOException {
         this.parentDb = parentDb;
 
-        String initSignature = null;
+        String initSignature;
         if(rrdDef != null) {
             version = rrdDef.getVersion(); 
             initSignature = SIGNATURE + ", " + VERSIONS[version - 1];
@@ -173,7 +174,7 @@ public class Header implements RrdUpdater<Header> {
         writer.writeTag("version", RRDTOOL_VERSION3);
         writer.writeComment("Seconds");
         writer.writeTag("step", step.get());
-        writer.writeComment(Util.getDate(lastUpdateTime.get()));
+        writer.writeComment(lastUpdateTime.get());
         writer.writeTag("lastupdate", lastUpdateTime.get());
     }
 

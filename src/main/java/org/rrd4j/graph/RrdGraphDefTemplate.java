@@ -5,7 +5,9 @@ import java.awt.Paint;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
+import java.util.function.ToLongBiFunction;
 
 import org.rrd4j.ConsolFun;
 import org.rrd4j.core.Util;
@@ -306,29 +308,36 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
             throw new IllegalArgumentException("XML definition must start with <rrd_graph_def>");
         }
         validateTagsOnlyOnce(root, new String[]{"filename", "span", "options", "datasources", "graph"});
-        rrdGraphDef = new RrdGraphDef();
+        ToLongBiFunction<String, String> resolve = (k, d)-> {
+            String value = Optional.ofNullable(Util.Xml.getFirstChildNode(root, "span"))
+                    .map( n -> Util.Xml.getFirstChildNode(n, k))
+                    .map(this::getValue)
+                    .orElse(d);
+            return Util.getTimestamp(value);
+        };
+        long start = resolve.applyAsLong("start", DEFAULT_START);
+        long end = resolve.applyAsLong("end", DEFAULT_END);
+        rrdGraphDef = new RrdGraphDef(start, end);
         // traverse all nodes
         Node[] childNodes = getChildNodes(root);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("filename")) {
+            switch (nodeName) {
+            case "filename":
                 resolveFilename(childNode);
-            }
-            // SPAN
-            else if (nodeName.equals("span")) {
-                resolveSpan(childNode);
-            }
+                break;
             // OPTIONS
-            else if (nodeName.equals("options")) {
+            case "options":
                 resolveOptions(childNode);
-            }
+                break;
             // DATASOURCES
-            else if (nodeName.equals("datasources")) {
+            case "datasources":
                 resolveDatasources(childNode);
-            }
+                break;
             // GRAPH ELEMENTS
-            else if (nodeName.equals("graph")) {
+            case "graph":
                 resolveGraphElements(childNode);
+                break;
             }
         }
         return rrdGraphDef;
@@ -340,29 +349,31 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(graphNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("area")) {
+            switch (nodeName) {
+            case "area":
                 resolveArea(childNode);
-            }
-            else if (nodeName.equals("line")) {
+                break;
+            case "line":
                 resolveLine(childNode);
-            }
-            else if (nodeName.equals("stack")) {
+                break;
+            case "stack":
                 resolveStack(childNode);
-            }
-            else if (nodeName.equals("print")) {
+                break;
+            case "print":
                 resolvePrint(childNode, false);
-            }
-            else if (nodeName.equals("gprint")) {
+                break;
+            case "gprint":
                 resolvePrint(childNode, true);
-            }
-            else if (nodeName.equals("hrule")) {
+                break;
+            case "hrule":
                 resolveHRule(childNode);
-            }
-            else if (nodeName.equals("vrule")) {
+                break;
+            case "vrule":
                 resolveVRule(childNode);
-            }
-            else if (nodeName.equals("comment")) {
+                break;
+            case "comment":
                 rrdGraphDef.comment(getValue(childNode, false));
+                break;
             }
         }
     }
@@ -375,14 +386,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("time")) {
+            switch (nodeName) {
+            case "time":
                 timestamp = Util.getTimestamp(getValue(childNode));
-            }
-            else if (nodeName.equals(COLOR)) {
+                break;
+            case COLOR:
                 color = getValueAsColor(childNode);
-            }
-            else if (nodeName.equals(LEGEND)) {
+                break;
+            case LEGEND:
                 legend = getValue(childNode);
+                break;
             }
         }
         if (timestamp != Long.MIN_VALUE && color != null) {
@@ -401,14 +414,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("value")) {
+            switch (nodeName) {
+            case "value":
                 value = getValueAsDouble(childNode);
-            }
-            else if (nodeName.equals(COLOR)) {
+                break;
+            case COLOR:
                 color = getValueAsColor(childNode);
-            }
-            else if (nodeName.equals(LEGEND)) {
+                break;
+            case LEGEND:
                 legend = getValue(childNode);
+                break;
             }
         }
         if (!Double.isNaN(value) && color != null) {
@@ -427,14 +442,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals(DATASOURCE)) {
+            switch (nodeName) {
+            case DATASOURCE:
                 datasource = getValue(childNode);
-            }
-            else if (nodeName.equals("cf")) {
+                break;
+            case "cf":
                 consolFun = ConsolFun.valueOf(getValue(childNode));
-            }
-            else if (nodeName.equals("format")) {
+                break;
+            case "format":
                 format = getValue(childNode);
+                break;
             }
         }
         if (datasource != null && consolFun != null && format != null) {
@@ -465,14 +482,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals(DATASOURCE)) {
+            switch (nodeName) {
+            case DATASOURCE:
                 datasource = getValue(childNode);
-            }
-            else if (nodeName.equals(COLOR)) {
+                break;
+            case COLOR:
                 color = getValueAsColor(childNode);
-            }
-            else if (nodeName.equals(LEGEND)) {
+                break;
+            case LEGEND:
                 legend = getValue(childNode);
+                break;
             }
         }
         if (datasource != null) {
@@ -496,17 +515,19 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals(DATASOURCE)) {
+            switch (nodeName) {
+            case DATASOURCE:
                 datasource = getValue(childNode);
-            }
-            else if (nodeName.equals(COLOR)) {
+                break;
+            case COLOR:
                 color = getValueAsColor(childNode);
-            }
-            else if (nodeName.equals(LEGEND)) {
+                break;
+            case LEGEND:
                 legend = getValue(childNode);
-            }
-            else if (nodeName.equals(WIDTH)) {
+                break;
+            case WIDTH:
                 width = (float) getValueAsDouble(childNode);
+                break;
             }
         }
         if (datasource != null) {
@@ -529,14 +550,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals(DATASOURCE)) {
+            switch (nodeName) {
+            case DATASOURCE:
                 datasource = getValue(childNode);
-            }
-            else if (nodeName.equals(COLOR)) {
+                break;
+            case COLOR:
                 color = getValueAsColor(childNode);
-            }
-            else if (nodeName.equals(LEGEND)) {
+                break;
+            case LEGEND:
                 legend = getValue(childNode);
+                break;
             }
         }
         if (datasource != null) {
@@ -557,14 +580,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(datasourcesNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("def")) {
+            switch (nodeName) {
+            case "def":
                 resolveDef(childNode);
-            }
-            else if (nodeName.equals("cdef")) {
+                break;
+            case "cdef":
                 resolveCDef(childNode);
-            }
-            else if (nodeName.equals("sdef")) {
+                break;
+            case "sdef":
                 resolveSDef(childNode);
+                break;
             }
         }
     }
@@ -578,23 +603,24 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("name")) {
+            switch (nodeName) {
+            case "name":
                 name = getValue(childNode);
-            }
-            else if (nodeName.equals(SOURCE)) {
+                break;
+            case SOURCE:
                 source = getValue(childNode);
-            }
-            else if (nodeName.equals("cf")) {
+                break;
+            case "cf":
                 String cfName = getValue(childNode);
-                if("percent".equals(cfName)) {
+                if ("percent".equals(cfName)) {
                     ispercentile = true;
-                }
-                else {
+                } else {
                     variable = ConsolFun.valueOf(cfName).getVariable();
                 }
-            }
-            else if(nodeName.equals("percentile")) {
+                break;
+            case "percentile":
                 percentile = getValueAsDouble(childNode);
+                break;
             }
         }
         if (name != null && source != null && variable != null) {
@@ -638,20 +664,22 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("name")) {
+            switch (nodeName) {
+            case "name":
                 name = getValue(childNode);
-            }
-            else if (nodeName.equals("rrd")) {
+                break;
+            case "rrd":
                 rrd = getValue(childNode);
-            }
-            else if (nodeName.equals(SOURCE)) {
+                break;
+            case SOURCE:
                 source = getValue(childNode);
-            }
-            else if (nodeName.equals("cf")) {
+                break;
+            case "cf":
                 consolFun = ConsolFun.valueOf(getValue(childNode));
-            }
-            else if (nodeName.equals("backend")) {
+                break;
+            case "backend":
                 backendName = getValue(childNode);
+                break;
             }
         }
         if (name != null && rrd != null && source != null && consolFun != null) {
@@ -671,15 +699,6 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         rrdGraphDef.setFilename(filename);
     }
 
-    private void resolveSpan(Node spanNode) {
-        validateTagsOnlyOnce(spanNode, new String[]{"start", "end"});
-        String startStr = getChildValue(spanNode, "start");
-        String endStr = getChildValue(spanNode, "end");
-        long[] span = Util.getTimestamps(startStr, endStr);
-        rrdGraphDef.setStartTime(span[0]);
-        rrdGraphDef.setEndTime(span[1]);
-    }
-
     private void resolveOptions(Node rootOptionNode) {
         validateTagsOnlyOnce(rootOptionNode, new String[]{
                 "anti_aliasing", "use_pool", "time_grid", "value_grid", "alt_y_grid", "alt_y_mrtg",
@@ -693,117 +712,119 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] optionNodes = getChildNodes(rootOptionNode);
         for (Node optionNode : optionNodes) {
             String option = optionNode.getNodeName();
-            if (option.equals("use_pool")) {
+            switch (option) {
+            case "use_pool":
                 rrdGraphDef.setPoolUsed(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("anti_aliasing")) {
+                break;
+            case "anti_aliasing":
                 rrdGraphDef.setAntiAliasing(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("time_grid")) {
+                break;
+            case "time_grid":
                 resolveTimeGrid(optionNode);
-            }
-            else if (option.equals("value_grid")) {
+                break;
+            case "value_grid":
                 resolveValueGrid(optionNode);
-            }
-            else if (option.equals("no_minor_grid")) {
+                break;
+            case "no_minor_grid":
                 rrdGraphDef.setNoMinorGrid(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("alt_y_grid")) {
+                break;
+            case "alt_y_grid":
                 rrdGraphDef.setAltYGrid(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("alt_y_mrtg")) {
+                break;
+            case "alt_y_mrtg":
                 rrdGraphDef.setAltYMrtg(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("alt_autoscale")) {
+                break;
+            case "alt_autoscale":
                 rrdGraphDef.setAltAutoscale(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("alt_autoscale_max")) {
+                break;
+            case "alt_autoscale_max":
                 rrdGraphDef.setAltAutoscaleMax(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("units_exponent")) {
+                break;
+            case "units_exponent":
                 rrdGraphDef.setUnitsExponent(getValueAsInt(optionNode));
-            }
-            else if (option.equals("units_length")) {
+                break;
+            case "units_length":
                 rrdGraphDef.setUnitsLength(getValueAsInt(optionNode));
-            }
-            else if (option.equals("vertical_label")) {
+                break;
+            case "vertical_label":
                 rrdGraphDef.setVerticalLabel(getValue(optionNode));
-            }
-            else if (option.equals(WIDTH)) {
+                break;
+            case WIDTH:
                 rrdGraphDef.setWidth(getValueAsInt(optionNode));
-            }
-            else if (option.equals("height")) {
+                break;
+            case "height":
                 rrdGraphDef.setHeight(getValueAsInt(optionNode));
-            }
-            else if (option.equals("interlaced")) {
+                break;
+            case "interlaced":
                 rrdGraphDef.setInterlaced(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("image_info")) {
+                break;
+            case "image_info":
                 rrdGraphDef.setImageInfo(getValue(optionNode));
-            }
-            else if (option.equals("image_format")) {
+                break;
+            case "image_format":
                 rrdGraphDef.setImageFormat(getValue(optionNode));
-            }
-            else if (option.equals("image_quality")) {
+                break;
+            case "image_quality":
                 rrdGraphDef.setImageQuality((float) getValueAsDouble(optionNode));
-            }
-            else if (option.equals("background_image")) {
+                break;
+            case "background_image":
                 rrdGraphDef.setBackgroundImage(getValue(optionNode));
-            }
-            else if (option.equals("overlay_image")) {
+                break;
+            case "overlay_image":
                 rrdGraphDef.setOverlayImage(getValue(optionNode));
-            }
-            else if (option.equals("unit")) {
+                break;
+            case "unit":
                 rrdGraphDef.setUnit(getValue(optionNode));
-            }
-            else if (option.equals("lazy")) {
+                break;
+            case "lazy":
                 rrdGraphDef.setLazy(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("min_value")) {
+                break;
+            case "min_value":
                 rrdGraphDef.setMinValue(getValueAsDouble(optionNode));
-            }
-            else if (option.equals("max_value")) {
+                break;
+            case "max_value":
                 rrdGraphDef.setMaxValue(getValueAsDouble(optionNode));
-            }
-            else if (option.equals("rigid")) {
+                break;
+            case "rigid":
                 rrdGraphDef.setRigid(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("base")) {
+                break;
+            case "base":
                 rrdGraphDef.setBase(getValueAsDouble(optionNode));
-            }
-            else if (option.equals("logarithmic")) {
+                break;
+            case "logarithmic":
                 rrdGraphDef.setLogarithmic(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("colors")) {
+                break;
+            case "colors":
                 resolveColors(optionNode);
-            }
-            else if (option.equals("no_legend")) {
+                break;
+            case "no_legend":
                 rrdGraphDef.setNoLegend(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("only_graph")) {
+                break;
+            case "only_graph":
                 rrdGraphDef.setOnlyGraph(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("force_rules_legend")) {
+                break;
+            case "force_rules_legend":
                 rrdGraphDef.setForceRulesLegend(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("title")) {
+                break;
+            case "title":
                 rrdGraphDef.setTitle(getValue(optionNode));
-            }
-            else if (option.equals("step")) {
+                break;
+            case "step":
                 rrdGraphDef.setStep(getValueAsLong(optionNode));
-            }
-            else if (option.equals("fonts")) {
+                break;
+            case "fonts":
                 resolveFonts(optionNode);
-            }
-            else if (option.equals("first_day_of_week")) {
+                break;
+            case "first_day_of_week":
                 int dayIndex = resolveFirstDayOfWeek(getValue(optionNode));
                 rrdGraphDef.setFirstDayOfWeek(dayIndex);
-            }
-            else if (option.equals("signature")) {
+                break;
+            case "signature":
                 rrdGraphDef.setShowSignature(getValueAsBoolean(optionNode));
-            }
-            else if (option.equals("timezone")) {
+                break;
+            case "timezone":
                 rrdGraphDef.setTimeZone(TimeZone.getTimeZone(getValue(optionNode)));
+                break;
             }
         }
     }
@@ -854,14 +875,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("name")) {
+            switch (nodeName) {
+            case "name":
                 name = getValue(childNode);
-            }
-            else if (nodeName.equals("style")) {
+                break;
+            case "style":
                 style = getValue(childNode).toLowerCase();
-            }
-            else if (nodeName.equals("size")) {
+                break;
+            case "size":
                 size = getValueAsInt(childNode);
+                break;
             }
         }
         if (name != null && style != null && size > 0) {
@@ -909,14 +932,16 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals(SHOW_GRID)) {
+            switch (nodeName) {
+            case SHOW_GRID:
                 showGrid = getValueAsBoolean(childNode);
-            }
-            else if (nodeName.equals("grid_step")) {
+                break;
+            case "grid_step":
                 gridStep = getValueAsDouble(childNode);
-            }
-            else if (nodeName.equals("label_factor")) {
+                break;
+            case "label_factor":
                 labelFactor = getValueAsInt(childNode);
+                break;
             }
         }
         rrdGraphDef.setDrawYGrid(showGrid);
@@ -944,32 +969,34 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
         Node[] childNodes = getChildNodes(parentNode);
         for (Node childNode : childNodes) {
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals(SHOW_GRID)) {
+            switch (nodeName) {
+            case SHOW_GRID:
                 showGrid = getValueAsBoolean(childNode);
-            }
-            else if (nodeName.equals("minor_grid_unit")) {
+                break;
+            case "minor_grid_unit":
                 minorGridUnit = resolveTimeUnit(getValue(childNode));
-            }
-            else if (nodeName.equals("minor_grid_unit_count")) {
+                break;
+            case "minor_grid_unit_count":
                 minorGridUnitCount = getValueAsInt(childNode);
-            }
-            else if (nodeName.equals("major_grid_unit")) {
+                break;
+            case "major_grid_unit":
                 majorGridUnit = resolveTimeUnit(getValue(childNode));
-            }
-            else if (nodeName.equals("major_grid_unit_count")) {
+                break;
+            case "major_grid_unit_count":
                 majorGridUnitCount = getValueAsInt(childNode);
-            }
-            else if (nodeName.equals("label_unit")) {
+                break;
+            case "label_unit":
                 labelUnit = resolveTimeUnit(getValue(childNode));
-            }
-            else if (nodeName.equals("label_unit_count")) {
+                break;
+            case "label_unit_count":
                 labelUnitCount = getValueAsInt(childNode);
-            }
-            else if (nodeName.equals("label_span")) {
+                break;
+            case "label_span":
                 labelSpan = getValueAsInt(childNode);
-            }
-            else if (nodeName.equals("label_format")) {
+                break;
+            case "label_format":
                 labelFormat = getValue(childNode);
+                break;
             }
         }
         rrdGraphDef.setDrawXGrid(showGrid);

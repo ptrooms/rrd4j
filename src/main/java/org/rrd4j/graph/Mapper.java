@@ -1,39 +1,24 @@
 package org.rrd4j.graph;
 
-import org.rrd4j.graph.ImageParameters;
-import org.rrd4j.graph.RrdGraphDef;
-
 class Mapper {
     private final RrdGraphDef gdef;
     private final ImageParameters im;
     private final double pixieX, pixieY;
-
-    Mapper(RrdGraph rrdGraph) {
-        this.gdef = rrdGraph.gdef;
-        this.im = rrdGraph.im;
-        pixieX = (double) im.xsize / (double) (im.end - im.start);
-        if (!gdef.logarithmic) {
-            pixieY = (double) im.ysize / (im.maxval - im.minval);
-        }
-        else {
-            pixieY = (double) im.ysize / (ValueAxisLogarithmic.log10(im.maxval) - ValueAxisLogarithmic.log10(im.minval));
-        }
-    }
 
     Mapper(RrdGraphDef gdef, ImageParameters im) {
         this.gdef = gdef;
         this.im = im;
         pixieX = (double) im.xsize / (double) (im.end - im.start);
         if (!gdef.logarithmic) {
-            pixieY = (double) im.ysize / (im.maxval - im.minval);
+            pixieY = im.ysize / (im.maxval - im.minval);
         }
         else {
-            pixieY = (double) im.ysize / (Math.log10(im.maxval) - Math.log10(im.minval));
+            pixieY = im.ysize / (im.log.applyAsDouble(im.maxval) - im.log.applyAsDouble(im.minval));
         }
     }
 
     int xtr(double mytime) {
-        return (int) ((double) im.xorigin + pixieX * (mytime - im.start));
+        return (int) (im.xorigin + pixieX * (mytime - im.start));
     }
 
     int ytr(double value) {
@@ -46,7 +31,7 @@ class Mapper {
                 yval = im.yorigin;
             }
             else {
-                yval = im.yorigin - pixieY * (ValueAxisLogarithmic.log10(value) - ValueAxisLogarithmic.log10(im.minval)) + 0.5;
+                yval = im.yorigin - pixieY * (im.log.applyAsDouble(value) - im.log.applyAsDouble(im.minval)) + 0.5;
             }
         }
         if (!gdef.rigid) {

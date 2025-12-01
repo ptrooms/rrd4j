@@ -1,13 +1,15 @@
 package org.rrd4j.core;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.rrd4j.ConsolFun;
 import org.rrd4j.data.Aggregates;
 import org.rrd4j.data.DataProcessor;
+import org.rrd4j.data.Variable;
 
 /**
  * Class used to represent data fetched from the RRD.
@@ -42,14 +44,14 @@ public class FetchData {
     // anything funny will do
     private static final String RPN_SOURCE_NAME = "WHERE THE SPEECHLES UNITE IN A SILENT ACCORD";
 
-    private FetchRequest request;
+    private final FetchRequest request;
     private String[] dsNames;
     private long[] timestamps;
     private double[][] values;
 
-    private Archive matchingArchive;
-    private long arcStep;
-    private long arcEndTime;
+    private final Archive matchingArchive;
+    private final long arcStep;
+    private final long arcEndTime;
 
     FetchData(Archive matchingArchive, FetchRequest request) throws IOException {
         this.matchingArchive = matchingArchive;
@@ -278,7 +280,7 @@ public class FetchData {
     }
 
     private static String padWithBlanks(String input, int width) {
-        StringBuilder buff = new StringBuilder("");
+        StringBuilder buff = new StringBuilder();
         int diff = width - input.length();
         while (diff-- > 0) {
             buff.append(' ');
@@ -349,11 +351,10 @@ public class FetchData {
      * @param rpnExpression RRDTool-like RPN expression
      * @return Object containing all aggregated values
      * @throws java.lang.IllegalArgumentException Thrown if invalid RPN expression is supplied
-     * @throws java.io.IOException if any.
      * @deprecated This method is deprecated. Uses instance of {@link org.rrd4j.data.Variable}, used with {@link org.rrd4j.data.DataProcessor#addDatasource(String, String, Variable)}
      */
     @Deprecated
-    public Aggregates getRpnAggregates(String rpnExpression) throws IOException {
+    public Aggregates getRpnAggregates(String rpnExpression) {
         DataProcessor dataProcessor = createDataProcessor(rpnExpression);
         return dataProcessor.getAggregates(RPN_SOURCE_NAME);
     }
@@ -401,17 +402,21 @@ public class FetchData {
      * Dumps fetch data to output stream in XML format. A flush is issued at the end of the xml generation.
      *
      * @param outputStream Output stream to dump fetch data to
-     * @throws java.io.IOException Thrown in case of I/O error
      */
-    public void exportXml(OutputStream outputStream) throws IOException {
+    public void exportXml(OutputStream outputStream) {
         //No auto flush for XmlWriter, it will be flushed once, when export is finished
-        XmlWriter writer = new XmlWriter(outputStream, false);
+        try (XmlWriter writer = new XmlWriter(outputStream, false)) {
+            exportXml(writer);
+        }
+    }
+
+    public void exportXml(XmlWriter writer) {
         writer.startTag("fetch_data");
         writer.startTag("request");
         writer.writeTag("file", request.getParentDb().getPath());
-        writer.writeComment(Util.getDate(request.getFetchStart()));
+        writer.writeComment(request.getFetchStart());
         writer.writeTag("start", request.getFetchStart());
-        writer.writeComment(Util.getDate(request.getFetchEnd()));
+        writer.writeComment(request.getFetchEnd());
         writer.writeTag("end", request.getFetchEnd());
         writer.writeTag("resolution", request.getResolution());
         writer.writeTag("cf", request.getConsolFun());
@@ -424,7 +429,7 @@ public class FetchData {
         writer.startTag("data");
         for (int i = 0; i < timestamps.length; i++) {
             writer.startTag("row");
-            writer.writeComment(Util.getDate(timestamps[i]));
+            writer.writeComment(timestamps[i]);
             writer.writeTag("timestamp", timestamps[i]);
             writer.startTag("values");
             for (int j = 0; j < dsNames.length; j++) {
@@ -435,9 +440,9 @@ public class FetchData {
         }
         writer.closeTag(); // data
         writer.closeTag(); // fetch_data
-        writer.flush();            
+        writer.flush();
     }
-    
+
     /**
      * Dumps fetch data to file in XML format.
      *
@@ -445,7 +450,7 @@ public class FetchData {
      * @throws java.io.IOException Thrown in case of I/O error
      */
     public void exportXml(String filepath) throws IOException {
-        try(OutputStream outputStream = new FileOutputStream(filepath)) {
+        try (OutputStream outputStream = Files.newOutputStream(Paths.get(filepath))) {
             exportXml(outputStream);
         }
     }
@@ -454,9 +459,8 @@ public class FetchData {
      * Dumps fetch data in XML format.
      *
      * @return String containing XML formatted fetch data
-     * @throws java.io.IOException Thrown in case of I/O error
      */
-    public String exportXml() throws IOException {
+    public String exportXml() {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         exportXml(outputStream);
         return outputStream.toString();

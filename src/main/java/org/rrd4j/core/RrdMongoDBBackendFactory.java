@@ -18,15 +18,27 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 
 /**
- * {@link org.rrd4j.core.RrdBackendFactory} that uses <a href="http://www.mongodb.org/">MongoDB</a> for data storage. Construct a
- * MongoDB {@link com.mongodb.DBCollection} or {@link com.mongodb.client.MongoCollection} and pass it via the constructor.
+ * <p>{@link org.rrd4j.core.RrdBackendFactory} that uses <a href="http://www.mongodb.org/">MongoDB</a> for data storage. Construct a
+ * MongoDB {@link com.mongodb.DBCollection} or {@link com.mongodb.client.MongoCollection} and pass it via the constructor.</p>
+ *
+ * <p>A simple use case could be </p>
+ * <pre>
+ * MongoClient mongoClient = ...
+ * MongoCollection&lt;DBObject&gt; collection =
+ * RrdBackendFactory factory = new RrdMongoDBBackendFactory(mongoClient, collection, false);
+ * RrdBackendFactory.setActiveFactories(factory);
+ * RrdDef def = new RrdDef(factory.getUri(...));
+ * </pre>
+ *
+ * <p>A mongo factory is in the form <code>mongodb://host:port/dbName/collectionName/</code></p>
  *
  * @author Mathias Bogaert
  */
 @RrdBackendAnnotation(name="MONGODB", shouldValidateHeader=false)
+@Deprecated
 public class RrdMongoDBBackendFactory extends RrdBackendFactory {
 
-    interface MongoWrapper {
+    protected interface MongoWrapper {
         void makeIndex(BasicDBObject index);
         boolean exists(BasicDBObject query);
         DBObject get(BasicDBObject query);
@@ -53,7 +65,7 @@ public class RrdMongoDBBackendFactory extends RrdBackendFactory {
     /**
      * Creates a RrdMongoDBBackendFactory. Make sure that the passed {@link com.mongodb.DBCollection} has a safe write
      * concern, is capped (if needed) and slaveOk() called if applicable.
-     * 
+     *
      * @param rrdCollection the collection to use for storing RRD byte data
      * @param registerAsDefault if true, the backend will be registered as the default
      * @deprecated create a instance instead
@@ -109,7 +121,7 @@ public class RrdMongoDBBackendFactory extends RrdBackendFactory {
     /**
      * Creates a RrdMongoDBBackendFactory. Make sure that the passed {@link com.mongodb.MongoClient} has a safe write
      * concern, is capped (if needed) and slaveOk() called if applicable.
-     * 
+     *
      * @param client the client connection
      * @param rrdCollection the collection to use for storing RRD byte data
      * @param registerAsDefault if true, the backend will be registered as the default
@@ -164,7 +176,7 @@ public class RrdMongoDBBackendFactory extends RrdBackendFactory {
     private URI buildRootUri(String dbName, String collectionName, List<ServerAddress> servers) {
         StringBuilder buffer = new StringBuilder();
         for (ServerAddress sa: servers) {
-            buffer.append(sa.getHost() + ":" + sa.getPort() + ",");
+            buffer.append(sa.getHost()).append(":").append(sa.getPort()).append(",");
         }
         buffer.deleteCharAt(buffer.length() - 1);
         try {
@@ -220,10 +232,10 @@ public class RrdMongoDBBackendFactory extends RrdBackendFactory {
                     try {
                         tryHosts.add(new ServerAddress(parts[0], Integer.parseInt(parts[1])));
                     } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException("can 't parse mongodb URI " + uri.toString());
+                        throw new IllegalArgumentException("can 't parse mongodb URI " + uri);
                     }
                 } else {
-                    throw new IllegalArgumentException("can 't parse mongodb URI " + uri.toString());
+                    throw new IllegalArgumentException("can 't parse mongodb URI " + uri);
                 }
                 if (! Collections.disjoint(tryHosts, wrapper.servers())) {
                     return resolvedUri;
@@ -257,10 +269,10 @@ public class RrdMongoDBBackendFactory extends RrdBackendFactory {
                 try {
                     tryHosts.add(new ServerAddress(parts[0], Integer.parseInt(parts[1])));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("can 't parse mongodb URI " + uri.toString());
+                    throw new IllegalArgumentException("can 't parse mongodb URI " + uri);
                 }
             } else {
-                throw new IllegalArgumentException("can 't parse mongodb URI " + uri.toString());
+                throw new IllegalArgumentException("can 't parse mongodb URI " + uri);
             }
         }
         return ! Collections.disjoint(tryHosts, wrapper.servers());

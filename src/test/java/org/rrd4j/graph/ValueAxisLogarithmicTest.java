@@ -17,19 +17,19 @@
  *******************************************************************************/
 package org.rrd4j.graph;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.Locale;
+
+import org.junit.Test;
+import org.rrd4j.core.RrdDb;
+import org.rrd4j.core.Sample;
+
 import static org.easymock.EasyMock.anyInt;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.gt;
 import static org.easymock.EasyMock.lt;
 import static org.easymock.EasyMock.same;
-
-import java.awt.FontFormatException;
-import java.io.IOException;
-import java.util.Date;
-
-import org.junit.Test;
-import org.rrd4j.core.RrdDb;
-import org.rrd4j.core.Sample;
 
 
 /**
@@ -55,7 +55,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
 
     @Override
     ValueAxisLogarithmic makeAxis(RrdGraph graph) {
-        return new ValueAxisLogarithmic(graph, imageWorker);
+        return new ValueAxisLogarithmic(graph, imageWorker, Locale.ENGLISH);
     }
 
     private void expectMajorGridLine(String label) {
@@ -77,9 +77,8 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
         //Horizontal tick on the right
         imageWorker.drawLine(gt(threeQuartersX), anyInt(), gt(threeQuartersX), anyInt(), eq(RrdGraphDef.DEFAULT_MGRID_COLOR), same(RrdGraphDef.TICK_STROKE));
         //Line in between the ticks (but overlapping a bit)
-        imageWorker.drawLine(lt(quarterX), anyInt(), gt(midX),anyInt(), eq(RrdGraphDef.DEFAULT_MGRID_COLOR), same(RrdGraphDef.GRID_STROKE));
+        imageWorker.drawLine(lt(quarterX), anyInt(), gt(midX), anyInt(), eq(RrdGraphDef.DEFAULT_MGRID_COLOR), same(RrdGraphDef.GRID_STROKE));
         imageWorker.drawString(eq(label), anyInt(), anyInt(), eq(graphDef.getFont(RrdGraphDef.FONTTAG_AXIS)), same(RrdGraphDef.DEFAULT_FONT_COLOR));
-
     }
 
     private void expectMinorGridLines(int count) {
@@ -98,9 +97,9 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testBasicEmptyRrd() throws IOException, FontFormatException {
+    public void testBasicEmptyRrd() throws IOException {
         createGaugeRrd(100);
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testBasicEmptyRrd");
 
         expectMinorGridLines(1);
         expectMajorGridLine("1e+00");
@@ -109,7 +108,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testOneEntryInRrd() throws IOException, FontFormatException {
+    public void testOneEntryInRrd() throws IOException {
         createGaugeRrd(100);
         try (RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build()) {
             long nowSeconds = new Date().getTime();
@@ -117,7 +116,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
             Sample sample = rrd.createSample();
             sample.setAndUpdate(fiveMinutesAgo+":10");
         }
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testOneEntryInRrd");
         expectMinorGridLines(1);
         expectMajorGridLine("1e+00");
 
@@ -125,7 +124,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testTwoEntriesInRrd() throws IOException, FontFormatException {
+    public void testTwoEntriesInRrd() throws IOException {
         createGaugeRrd(100);
         try (RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build()) {
             for(int i=0; i<2; i++) {
@@ -134,7 +133,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
                 sample.setAndUpdate(timestamp+":100");
             }
         }
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testTwoEntriesInRrd");
 
         expectMinorGridLines(1);
         expectMajorGridLine("1e+02");
@@ -143,7 +142,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testEntriesZeroTo100InRrd() throws IOException, FontFormatException {
+    public void testEntriesZeroTo100InRrd() throws IOException {
         createGaugeRrd(105); //Make sure all entries are recorded (5 is just a buffer for consolidation)
         try (RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build()) {
             for(int i=0; i<100; i++) {
@@ -152,7 +151,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
                 sample.setAndUpdate(timestamp + ":" + i);
             }
         }
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testEntriesZeroTo100InRrd");
         expectMinorGridLines(11);
         expectMajorGridLine("1e+00");
         expectMajorGridLine("1e+01");
@@ -162,7 +161,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testEntriesNeg50To100InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg50To100InRrd() throws IOException {
         createGaugeRrd(155);
         try (RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build()) {
             for(int i=0; i<150; i++) {
@@ -171,9 +170,9 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
                 sample.setAndUpdate(timestamp + ":" + (i -50));
             }
         }
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testEntriesNeg50To100InRrd");
         expectMinorGridLines(5);
-        expectMajorGridLine("0e+00");
+        expectMajorGridLine("0");
         expectMajorGridLine("1e+01");
         expectMajorGridLine("1e+02");
         expectMajorGridLine("-1e+01");
@@ -182,7 +181,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testEntriesNeg50To0InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg50To0InRrd() throws IOException {
         createGaugeRrd(100);
         try (RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build()) {
             for(int i=0; i<50; i++) {
@@ -191,7 +190,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
                 sample.setAndUpdate(timestamp + ":" + (i -50));
             }
         }
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testEntriesNeg50To0InRrd");
 
         expectMinorGridLines(5);
         expectMajorGridLine("-1e+01");
@@ -200,7 +199,7 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
     }
 
     @Test
-    public void testEntriesNeg80To80InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg80To80InRrd() throws IOException {
         createGaugeRrd(180);
         try (RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build()) {
             for (int i = 0; i < 160; i++) {
@@ -211,10 +210,10 @@ public class ValueAxisLogarithmicTest extends AxisTester<ValueAxisLogarithmic> {
         } finally {
             // TODO: handle finally clause
         }
-        prepareGraph();
+        prepareGraph("ValueAxisLogarithmicTest", "testEntriesNeg80To80InRrd");
 
         expectMinorGridLines(4);
-        expectMajorGridLine("0e+00");
+        expectMajorGridLine("0");
         expectMajorGridLine("1e+01");
         expectMajorGridLine("-1e+01");
 

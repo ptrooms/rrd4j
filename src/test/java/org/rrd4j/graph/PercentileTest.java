@@ -37,17 +37,14 @@ public class PercentileTest {
 
     @Test
     public void testSampleVDEFPercentile1() throws Exception {
-
         long startTime = (int)( now / 1000);
         startTime -= (startTime % 300); 
         long endTime = startTime +  200 * 300;
 
         createRrdFile(fileName, startTime);
 
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setStartTime(startTime - 300);
-        graphDef.setEndTime(endTime + 300);
-        graphDef.datasource("baz", backend.getUri(fileName).toString(), "bar", ConsolFun.AVERAGE);
+        RrdGraphDef graphDef = new RrdGraphDef(startTime - 300, endTime + 300);
+        graphDef.datasource("baz", backend.getUri(fileName), "bar", ConsolFun.AVERAGE);
         graphDef.datasource("nfp", "baz", new Variable.PERCENTILE(95));
         graphDef.print("nfp", "%le", false);
         graphDef.setLocale(Locale.ENGLISH);
@@ -56,7 +53,6 @@ public class PercentileTest {
 
         RrdGraphInfo info = graph.getRrdGraphInfo();
         Assert.assertNotNull("graph info object", info);
-
         String[] printLines = info.getPrintLines();
         Assert.assertNotNull("graph printLines", printLines);
         Assert.assertEquals("graph printLines size", 1, printLines.length);
@@ -66,17 +62,14 @@ public class PercentileTest {
 
     @Test
     public void testSampleVDEFPercentile2() throws Exception {
-
         long startTime = (int)( now / 1000);
         startTime -= (startTime % 300); 
         long endTime = startTime +  100 * 300;
 
         createRrdFile(fileName, startTime);
 
-        RrdGraphDef graphDef = new RrdGraphDef();
-        graphDef.setStartTime(startTime - 300);
-        graphDef.setEndTime(endTime + 300);
-        graphDef.datasource("baz", backend.getUri(fileName).toString(), "bar", ConsolFun.AVERAGE);
+        RrdGraphDef graphDef = new RrdGraphDef(startTime - 300, endTime + 300);
+        graphDef.datasource("baz", backend.getUri(fileName), "bar", ConsolFun.AVERAGE);
         graphDef.datasource("nfp", "baz", new Variable.PERCENTILE(95));
         graphDef.print("nfp", "%le", false);
         graphDef.setLocale(Locale.ENGLISH);
@@ -106,7 +99,7 @@ public class PercentileTest {
                 db.createSample(sampleTime).setValue(0, val).update();
                 sampleTime += 300;
             }
-        };
+        }
     }
 
 }

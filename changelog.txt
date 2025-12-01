@@ -1,5 +1,6 @@
-Changes in version 3.6 - 31 Mar 2021.
-------------------------------------
+====
+Changes brnach ptro_31mar25
+---------------------------
 This version is a clone from https://github.com/rrd4j/rrd4j to https://github.com/ptrooms/rrd4j
 branch https://github.com/ptrooms/rrd4j/tree/ptro31mar21
 Modified to allow use for keyboard key in inpector table to fix "NaN" values more easily 
@@ -9,6 +10,92 @@ Modified to allow use for keyboard key in inpector table to fix "NaN" values mor
 * = zero
 
 Note: while compiling on Java11 (maven) the output panel (Swing) is lightly formatted differently.
+
+=======
+Changes in version 3.10 - <TOBEDONE>.
+-------------------------------
+
+These release introduce a feature that allows to provide a custom ImageWorker. It allows to generate
+native SVG images using any SVG library. There is a sample implementation org.rrd4j.graph.SVGImageWorker in the test code.
+
+The mongoDb backend is now splitter in two factory. The old driver, org.rrd4j.core.RrdMongoDBBackendFactory needs the old
+mongodb-driver-legacy in version 3. The new one org.rrd4j.core.RrdMongoDBNewBackendFactory uses the latest mongodb-driver-sync.
+As they both use the same scheme (mongodb), it’s not a good idea to register both at the same time.
+
+* PR 162: Make RRD DB closing idempotent when used with a pool
+* PR 161: Prevent excess RrdBackend.close() invocation
+* PR 164: Add current file name to window title of RRD File Inspector
+* PR 166: ImageWorker rendering improvements
+* PR 168: Upgrade to mongodb-java-sync
+
+=======
+Changes in version 3.9 - 14 aug 2023.
+-------------------------------
+
+These release includes two minor breaking changes.
+* Lots of useless thrown exceptions were removed, even in a few public API.
+* module name is now explicit, not derived from the file name.
+
+* PR 157: Use correct fonts when calculating limits
+* PR 156: Omit redundant fractional part on y-axis labels
+* PR 155: Avoid y-axis label corruption when using large axis font
+* PR 154: AXIS font was used instead of UNIT font
+* PR 153: Fix slow RrdGraph generation with big data sets
+
+=======
+Changes in version 3.8.2 - 14 oct 2022.
+-------------------------------
+
+* Fixed Issue 152: rrdDef.getPath() Does not return correct path in case of Windows machine.
+
+=======
+Changes in version 3.8.1 - 26 dec 2021.
+-------------------------------
+
+As bintray is now closed, publication is done using Sonatype OSSRH. The keys used to sign package are listed in the KEYS
+file.
+
+* Fixed Issue 144: Unable to delete the image file.
+
+=======
+Changes in version 3.8 - 8 dec 2020.
+-------------------------------
+
+Slightly improving time parser, with better tests. 4 digits year can now be any year. For two digits year, 38 is used as a pivot. Before that, it means 20xx, after 19xx.
+
+Extending SI prefixes to the set: 'y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', ' ', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'
+
+* Fixed Issue 141: Setting graph property "start" seems broken in 3.7.
+
+Changes in version 3.7 - 16 Aug 2020.
+-------------------------------
+
+The font used by RRD4J can now be defined a set of properties. See the introduction of the class RrdGraphConstants for more details.
+
+Improving URI normalization used internally by the pool, to ensure that same RRD opened using different path are indeed resolved as the same.
+
+Added a RrdDbPool.lockEmpty method to wait for an empty pool and lock it.
+
+The RrdDb.Builder.setPool now automatically enable the pool usage.
+
+Plottable usages are all replaced by an IPlottable interface, so lambda can be used instead. This class is now marked as deprecated.
+
+Changes in version 3.6 - 06 Apr 2020.
+-------------------------------
+
+Adding source for background or overlay image. They can be now an URL or even a custom generated image.
+
+An image can also be added in the canvas (the area where the plot are drawn).
+
+Dropped java 1.7 support.
+
+Build settings to compile with latest JVM, but still able to run on the officially support JVM.
+
+A new pool, using features from Java 8. They were some rare leaks in the old one and using modern java features should reduce locking.
+It contains some assert so it might help discover problems early. All the public requestRrdDb are not deprecated any more, as they provide
+a convenient way to get RrdDb using a pool.
+
+* Fixed Issue 135: ByteBufferBackend.get fails with BufferUnderflow.
 
 Changes in version 3.5 - 10 Feb 2019.
 ------------------------------------

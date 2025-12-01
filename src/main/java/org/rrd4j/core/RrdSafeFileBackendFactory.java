@@ -4,6 +4,9 @@ import java.io.IOException;
 
 /**
  * Factory class which creates actual {@link org.rrd4j.core.RrdSafeFileBackend} objects.
+ * <p>
+ * Because of locking, each RrdDb can be open only once even from within the JVM. So usage
+ * of the {@link org.rrd4j.core.RrdDbPool} is mandatory with this backend.
  *
  */
 @RrdBackendAnnotation(name="SAFE", shouldValidateHeader=true, cachingAllowed=false)
@@ -34,8 +37,8 @@ public class RrdSafeFileBackendFactory extends RrdRandomAccessFileBackendFactory
 
     /**
      * Generate a factory with custom lock settings
-     * @param lockWaitTime
-     * @param lockRetryPeriod
+     * @param lockWaitTime wait time in ms
+     * @param lockRetryPeriod retry period in ms
      */
     public RrdSafeFileBackendFactory(long lockWaitTime, long lockRetryPeriod) {
         this.lockWaitTime = lockWaitTime;

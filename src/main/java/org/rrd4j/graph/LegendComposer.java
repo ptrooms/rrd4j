@@ -6,24 +6,25 @@ import java.util.List;
 class LegendComposer implements RrdGraphConstants {
     private final RrdGraphDef gdef;
     private final ImageWorker worker;
-    private int legX, legY;
+    private final int legX;
+    private int legY;
     private final int legWidth;
 
-    private double interLegendSpace;
-    private double leading;
-    private double smallLeading;
-    private double boxSpace;
+    private final double interLegendSpace;
+    private final double leading;
+    private final double smallLeading;
+    private final double boxSpace;
 
-    LegendComposer(RrdGraph rrdGraph, int legX, int legY, int legWidth) {
-        this.gdef = rrdGraph.gdef;
-        this.worker = rrdGraph.worker;
+    LegendComposer(RrdGraphGenerator generator, int legX, int legY, int legWidth) {
+        this.gdef = generator.gdef;
+        this.worker = generator.worker;
         this.legX = legX;
         this.legY = legY;
         this.legWidth = legWidth;
-        interLegendSpace = rrdGraph.getInterlegendSpace();
-        leading = rrdGraph.getLeading();
-        smallLeading = rrdGraph.getSmallLeading();
-        boxSpace = rrdGraph.getBoxSpace();
+        interLegendSpace = generator.getInterlegendSpace();
+        leading = generator.getLeading();
+        smallLeading = generator.getSmallLeading();
+        boxSpace = generator.getBoxSpace();
     }
 
     int placeComments() {
@@ -46,7 +47,7 @@ class LegendComposer implements RrdGraphConstants {
         private double width;
         private int spaceCount;
         private boolean noJustification;
-        private List<CommentText> comments = new ArrayList<CommentText>();
+        private final List<CommentText> comments = new ArrayList<>();
 
         Line() {
             clear();

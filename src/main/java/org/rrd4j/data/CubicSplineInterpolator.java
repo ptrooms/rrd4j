@@ -13,9 +13,10 @@ import java.util.Date;
  * <b>WARNING</b>: So far, this class cannot handle NaN datasource values
  * (an exception will be thrown by the constructor). Future releases might change this.
  */
+@SuppressWarnings("deprecation")
 public class CubicSplineInterpolator extends Plottable {
-    private double[] x;
-    private double[] y;
+    private final double[] x;
+    private final double[] y;
 
     // second derivates come here
     private double[] y2;
@@ -103,6 +104,7 @@ public class CubicSplineInterpolator extends Plottable {
         for (int i = 0; i < x.length - 1 && ok; i++) {
             if (x[i] >= x[i + 1] || Double.isNaN(y[i])) {
                 ok = false;
+                break;
             }
         }
         if (!ok) {

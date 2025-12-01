@@ -168,7 +168,7 @@ public class Demo {
         // create graph
         println("Creating graph " + Util.getLapTime());
         println("== Creating graph from the second file");
-        RrdGraphDef gDef = new RrdGraphDef();
+        RrdGraphDef gDef = new RrdGraphDef(start, end);
         gDef.setTimeLabelFormat(new CustomTimeLabelFormat());
         gDef.setLocale(Locale.US);
         gDef.setWidth(IMG_WIDTH);
@@ -178,8 +178,6 @@ public class Demo {
         //gDef.setFontSet(true);
 
         gDef.setFilename(imgPath);
-        gDef.setStartTime(start);
-        gDef.setEndTime(end);
         gDef.setTitle("Temperatures in May-June 2010");
         gDef.setVerticalLabel("temperature");
 
@@ -220,7 +218,7 @@ public class Demo {
         gDef.setImageInfo("<img src='%s' width='%d' height = '%d'>");
         gDef.setPoolUsed(false);
         gDef.setImageFormat("png");
-        gDef.setDownsampler(new eu.bengreen.data.utility.LargestTriangleThreeBuckets((int)(IMG_WIDTH * 1)));
+        gDef.setDownsampler(new eu.bengreen.data.utility.LargestTriangleThreeBuckets(IMG_WIDTH));
         println("Rendering graph " + Util.getLapTime());
         // create graph finally
         RrdGraph graph = new RrdGraph(gDef);
@@ -249,7 +247,7 @@ public class Demo {
 
     static class GaugeSource {
         private double value;
-        private double step;
+        private final double step;
 
         GaugeSource(double value, double step) {
             this.value = value;
@@ -290,4 +288,3 @@ public class Demo {
         }
     }
 }
-

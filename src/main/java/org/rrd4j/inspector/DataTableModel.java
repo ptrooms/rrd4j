@@ -47,16 +47,19 @@ class DataTableModel extends AbstractTableModel {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getColumnName(int column) {
         return COLUMN_NAMES[column];
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return columnIndex == 2;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         assert columnIndex == 2 : "Column " + columnIndex + " is not editable!";
 
@@ -112,7 +115,7 @@ class DataTableModel extends AbstractTableModel {
                     Robin robin = arc.getRobin(dsIndex);
                     long start = arc.getStartTime();
                     long step = arc.getArcStep();
-                    double robinValues[] = robin.getValues();
+                    double[] robinValues = robin.getValues();
                     values = new Object[robinValues.length][];
                     for (int i = 0; i < robinValues.length; i++) {
                         long timestamp = start + i * step;

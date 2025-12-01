@@ -23,7 +23,6 @@ import static org.easymock.EasyMock.gt;
 import static org.easymock.EasyMock.lt;
 import static org.easymock.EasyMock.same;
 
-import java.awt.FontFormatException;
 import java.io.IOException;
 import java.util.Date;
 
@@ -47,10 +46,6 @@ import org.rrd4j.core.Sample;
  */
 
 public class ValueAxisTest extends AxisTester<ValueAxis> {
-
-    @Override
-    void setupGraphDef() {
-    }
 
     @Override
     ValueAxis makeAxis(RrdGraph rrdGraph) {
@@ -111,14 +106,14 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
     }
 
     @Test
-    public void testBasicEmptyRrd() throws IOException, FontFormatException {
+    public void testBasicEmptyRrd() throws IOException {
         createGaugeRrd(100);
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testBasicEmptyRrd");
         checkForBasicGraph();
     }
 
     @Test
-    public void testOneEntryInRrd() throws IOException, FontFormatException {
+    public void testOneEntryInRrd() throws IOException {
         createGaugeRrd(100);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
         long nowSeconds = new Date().getTime();
@@ -126,12 +121,12 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
         Sample sample = rrd.createSample();
         sample.setAndUpdate(fiveMinutesAgo+":10");
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testOneEntryInRrd");
         checkForBasicGraph();
     }
 
     @Test
-    public void testTwoEntriesInRrd() throws IOException, FontFormatException {
+    public void testTwoEntriesInRrd() throws IOException {
         createGaugeRrd(100);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -141,7 +136,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp+":100");
         }
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testTwoEntriesInRrd");
 
         expectMajorGridLine("  90");
         expectMinorGridLines(1);
@@ -157,7 +152,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
     }
 
     @Test
-    public void testEntriesZeroTo100InRrd() throws IOException, FontFormatException {
+    public void testEntriesZeroTo100InRrd() throws IOException {
         createGaugeRrd(105); //Make sure all entries are recorded (5 is just a buffer for consolidation)
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -167,7 +162,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp + ":" + i);
         }
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testEntriesZeroTo100InRrd");
         expectMinorGridLines(4);
         expectMajorGridLine("  50");
         expectMinorGridLines(4);
@@ -178,7 +173,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
     }
 
     @Test
-    public void testEntriesNeg50To100InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg50To100InRrd() throws IOException {
         createGaugeRrd(155);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -188,7 +183,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp + ":" + (i -50));
         }
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testEntriesNeg50To100InRrd");
         expectMajorGridLine(" -50");
         expectMinorGridLines(4);
         expectMajorGridLine("   0");
@@ -202,7 +197,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
     }
 
     @Test
-    public void testEntriesNeg55To105InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg55To105InRrd() throws IOException {
         createGaugeRrd(165);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -212,9 +207,8 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp + ":" + (i -55));
         }
         rrd.close();
-        prepareGraph();
-        /**
-         * Prior to JRB-12 fix, this was the behaviour.  Note the lack of a decent negative label
+        prepareGraph("ValueAxisTest", "testEntriesNeg55To105InRrd");
+        /* Prior to JRB-12 fix, this was the behaviour.  Note the lack of a decent negative label
                 expectMinorGridLines(3);
                 expectMajorGridLine("   0");
                 expectMinorGridLines(4);
@@ -232,7 +226,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
     }
 
     @Test
-    public void testEntriesNeg50To0InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg50To0InRrd() throws IOException {
         createGaugeRrd(100);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -242,7 +236,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp + ":" + (i -50));
         }
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testEntriesNeg50To0InRrd");
         expectMinorGridLines(2);
         expectMajorGridLine(" -40");
         expectMinorGridLines(3);
@@ -259,10 +253,9 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
      * (i.e. limited pixels available for X-axis labelling),ValueAxis gets all confused 
      * and decides it can only display "0" on the X-axis  (there's not enough pixels
      * for more labels, and none of the Y-label factorings available work well enough
-     * @throws FontFormatException 
      */
     @Test
-    public void testEntriesNeg80To90InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg80To90InRrd() throws IOException {
         createGaugeRrd(180);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -272,7 +265,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp + ":" + (i -80));
         }
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testEntriesNeg80To90InRrd");
         /**
          * Original behaviour; a single major X-axis label (0) only.
                 expectMinorGridLines(4);
@@ -293,10 +286,9 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
      * Related to testEntriesNeg80To90InRrd, except in the original code
      * this produced sensible labelling.  Implemented to check that the 
      * changes don't break the sanity.
-     * @throws FontFormatException 
      */
     @Test
-    public void testEntriesNeg80To80InRrd() throws IOException, FontFormatException {
+    public void testEntriesNeg80To80InRrd() throws IOException {
         createGaugeRrd(180);
         RrdDb rrd = RrdDb.getBuilder().setPath(jrbFileName).build();
 
@@ -306,7 +298,7 @@ public class ValueAxisTest extends AxisTester<ValueAxis> {
             sample.setAndUpdate(timestamp + ":" + (i -80));
         }
         rrd.close();
-        prepareGraph();
+        prepareGraph("ValueAxisTest", "testEntriesNeg80To80InRrd");
 
         // Original
         expectMinorGridLines(3);

@@ -35,14 +35,13 @@ class MinMax {
                 sample.setValue("a", Math.sin(t / 3000.0) * 50 + 50);
                 sample.update();
             }
-        };
+        }
         // graph
-        RrdGraphDef gDef = new RrdGraphDef();
+        RrdGraphDef gDef = new RrdGraphDef(start, start + 86400);
         gDef.setFilename(pngFile);
         gDef.setWidth(450);
         gDef.setHeight(250);
         gDef.setImageFormat("png");
-        gDef.setTimeSpan(start, start + 86400);
         gDef.setTitle("RRDTool's MINMAX.pl demo");
         gDef.datasource("a", rrdFile, "a", AVERAGE);
         gDef.datasource("b", rrdFile, "a", MIN);

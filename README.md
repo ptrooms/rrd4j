@@ -2,7 +2,7 @@ rrd4j
 =====
 
 [![Gitter chat](https://badges.gitter.im/rrd4j/Lobby.png)](https://gitter.im/rrd4j/Lobby)
-[![Build Status](https://travis-ci.org/rrd4j/rrd4j.svg?branch=master)](https://travis-ci.org/rrd4j/rrd4j)
+[![Build Status](https://circleci.com/gh/rrd4j/rrd4j.svg?style=svg)](https://circleci.com/gh/rrd4j/rrd4j/tree/master)
 [![Javadocs](https://www.javadoc.io/badge/org.rrd4j/rrd4j.svg)](https://www.javadoc.io/doc/org.rrd4j/rrd4j)
 
 RRD4J is a high performance data logging and graphing system for time series data, implementing [RRDTool's](http://oss.oetiker.ch/rrdtool/)
@@ -13,14 +13,18 @@ RRD4J's API is made for those who are familiar with [RRDTool's](http://oss.oetik
 work with pure Java (no native functions or libraries, no Runtime.exec(), RRDTool does not have to be present). We help out our
 users [here](https://groups.google.com/forum/#!forum/rrd4j-discuss).
 
-### Latest Version (requires Java 7+)
+### Latest Version (requires Java 8+)
 
-RRD4J 3.4 (released 2018-12-27) - [Download](https://github.com/rrd4j/rrd4j/releases) - [Changelog](https://raw.githubusercontent.com/rrd4j/rrd4j/master/changelog.txt)
+RRD4J 3.9 (released 2023-08-14) - [Download](https://github.com/rrd4j/rrd4j/releases) - [Changelog](https://raw.githubusercontent.com/rrd4j/rrd4j/release/changelog.txt)
 
 ### Building (optional)
 
 RRD4J is built using Maven. The generated site is available [here](http://rrd4j.org/). Automated builds are uploaded
 to [Sonatype's repository](https://oss.sonatype.org/content/repositories/snapshots/org/rrd4j/rrd4j).
+ 
+Tests needs a running mongo instance to succeds. It could be started with:
+
+    docker run --rm  -p 27017:27017 mongo:latest
 
 ### Using with Maven
 
@@ -30,7 +34,7 @@ Add this dependency to your project's POM file:
 <dependency>
     <groupId>org.rrd4j</groupId>
     <artifactId>rrd4j</artifactId>
-    <version>3.4</version>
+    <version>3.9</version>
 </dependency>
 ```
 
@@ -40,7 +44,7 @@ Add this dependency to your project's POM file:
   * Simple API
   * Supports the same data source types as RRDTool (`COUNTER`, `ABSOLUTE`, `DERIVE`, `GAUGE`)
   * Supports the same consolidation functions as RRDTool (`AVERAGE`, `MIN`, `MAX`, `LAST`) and adds `TOTAL`, `FIRST`
-  * Supports almost all RRDTool RPN functions (wiki/see [RPNFuncs](RPNFuncs))
+  * Supports almost all RRDTool RPN functions (wiki/see [RPNFuncs](https://github.com/rrd4j/rrd4j/wiki/RPNFuncs))
   * Multiple backends, e.g. use MongoDB as data store
 
 ### Usage Example

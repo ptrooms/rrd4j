@@ -13,6 +13,7 @@ import org.rrd4j.graph.DownSampler.DataSet;
 import eu.bengreen.data.utility.LargestTriangleThreeBuckets;
 import eu.bengreen.data.utility.LargestTriangleThreeBucketsTime;
 
+@SuppressWarnings("deprecation")
 public class DownSamplerTest {
 
     private static final long[] al = new long[]{};
@@ -29,7 +30,7 @@ public class DownSamplerTest {
     public double[] getValues(int size, boolean withNaN) {
         double[] v = new double[size];
         for (int i = 0 ; i< size; i++) {
-            if (!withNaN || (int)(i / (size / 3)) != 1) {
+            if (!withNaN || (i / (size / 3)) != 1) {
                 v[i] = Math.cos(Math.PI * (double)i / (double)size);
 
             } else {
