@@ -1,13 +1,13 @@
-====
-Changes brnach ptro_31mar25
----------------------------
+======
+Changes branch ptro_31mar25 3.6-SNAPSHOT
+----------------------------------------
 This version is a clone from https://github.com/rrd4j/rrd4j to https://github.com/ptrooms/rrd4j
-branch https://github.com/ptrooms/rrd4j/tree/ptro31mar21
-Modified to allow use for keyboard key in inpector table to fix "NaN" values more easily 
+branch https://github.com/ptrooms/rrd4j/tree/ptro31mar21 --> //github.com/ptrooms/rrd4j/tree/01dec25
 
-* - copy from previous line
-* + copy from next line
-* = zero
+Modified to allow use for keyboard key in inpector table to fix "NaN" values more easily 
+  * - copy from previous line
+  * + copy from next line
+  * = zero
 
 Note: while compiling on Java11 (maven) the output panel (Swing) is lightly formatted differently.
 
