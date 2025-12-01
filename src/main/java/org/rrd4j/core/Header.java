@@ -61,6 +61,7 @@ public class Header implements RrdUpdater<Header> {
     Header(RrdDb parentDb, DataImporter reader) throws IOException {
         this(parentDb, (RrdDef) null);
         String importVersion = reader.getVersion();
+        System.out.println("ptrooms: rrd4j header:" + importVersion ) ;
         switch(importVersion) {
         case RRDTOOL_VERSION1:
             version = 1;
@@ -214,7 +215,9 @@ public class Header implements RrdUpdater<Header> {
     }
 
     boolean isRrd4jHeader() {
+        
         try {
+            System.out.println("ptrooms: signature:" + signature.readString() ) ;
             return signature.get().startsWith(SIGNATURE) || signature.get().startsWith("JR"); // backwards compatible with JRobin
         } catch (IOException ioe) {
             return false;

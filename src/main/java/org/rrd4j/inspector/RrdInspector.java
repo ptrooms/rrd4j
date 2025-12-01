@@ -50,11 +50,11 @@ public class RrdInspector extends JFrame {
     static final String TITLE = "RRD File Inspector";
     static final boolean SHOULD_FIX_ARCHIVED_VALUES = false;
 
-    static final Dimension MAIN_TREE_SIZE = new Dimension(250, 400);
+    static final Dimension MAIN_TREE_SIZE = new Dimension(500, 800);
     static final Dimension INFO_PANE_SIZE = new Dimension(450, 400);
 
     static final String ABOUT = "RRD4J\nRRD File Inspector\n" +
-            "Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group, Inc. Licensed under the Apache License, Version 2.0.";
+            "Copyright (c) 2021-25 Peter Ooms, Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group,  Inc. Licensed under the Apache License, Version 2.0. ";
     private static final String JSCROLL_BAR_FAST_WHEEL_SCROLLING = "JScrollBar.fastWheelScrolling";
     private static final String OPEN_A_VALID_RRD_FILE_FIRST = "Open a valid RRD file first.";
     private static final String SELECT_ARCHIVE_FIRST = "Select archive first";
@@ -74,6 +74,15 @@ public class RrdInspector extends JFrame {
     private RrdInspector(String path) throws Exception {
         super(TITLE);
 
+        /* ptrooms/dic/explain:
+            SwingUtilities , Event Dispatch Thread (EDT). 
+                It is started as soon as a Swing top-level component is displayed, 
+                and it's bascially a worker thread that has a FIFO queue of 
+                event objects that it executes one after another.
+                invokeAndWait() places the Runnable you pass to it into 
+                the EDT event queue and waits until the EDT has executed it. 
+            pack: java.awt.Window.pack(): fit to layout [https://docs.oracle.com/javase/8/docs/api/java/awt/Window.html]
+        */
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 constructUI();
@@ -90,6 +99,9 @@ public class RrdInspector extends JFrame {
         }
     }
 
+    /*
+        Format en contruct Windows using Swing Jtable
+     */
     private void constructUI() {
         JPanel content = (JPanel) getContentPane();
         content.setLayout(new BorderLayout());
@@ -128,9 +140,11 @@ public class RrdInspector extends JFrame {
         splitPane.setOneTouchExpandable(true);
 
         mainTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        mainTree.addTreeSelectionListener(new TreeSelectionListener() {
+        // read [https://docs.oracle.com/javase/tutorial/uiswing/events/treeselectionlistener.html]
+        mainTree.addTreeSelectionListener(new TreeSelectionListener() {         // note: this is a calling routine sequence
             public void valueChanged(TreeSelectionEvent e) {
                 nodeChangedAction();
+                System.out.println("ptrooms: addTreeSelectionListener.") ;
                 plotButton.setEnabled(isArchiveNode(getSelectedRrdNode()));
             }
         });
@@ -339,6 +353,10 @@ public class RrdInspector extends JFrame {
         RrdNode rrdNode = getSelectedRrdNode();
         if (rrdNode != null) {
             inspectorModel.selectModel(rrdNode.getDsIndex(), rrdNode.getArcIndex());
+            System.out.println("ptrooms: rrdNode.getDsIndex=" + rrdNode.getDsIndex() 
+                                     + "rdNode.getArcIndex=" + rrdNode.getArcIndex() );     // print number for debug
+            // getArcIndex = linenumber of tree
+
             if (rrdNode.getDsIndex() >= 0 && rrdNode.getArcIndex() >= 0) {
                 // archive node
                 if (tabbedPane.getSelectedIndex() < 2) {
@@ -597,11 +615,19 @@ public class RrdInspector extends JFrame {
             printUsageAndExit();
         }
 
-        // Set look and feel
+        // Set look and feel  // 31mar21 ptro: (and place to set font)
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 try {
                     UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+                    
+/* Does not work
+	
+					UIManager.put("Label.font", new setLookAndFeel(new Font("Dialog", Font.PLAIN, 10)));
+					// UIManager.put("Button.font", new FontUIResource(new Font("Dialog", Font.BOLD, 10)));
+					// UIManager.put("TextField.font", new FontUIResource(new Font("Dialog", Font.PLAIN, 10)));
+*/
+
                 } catch (Exception e1) {
                     try {
                         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
