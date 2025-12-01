@@ -61,6 +61,7 @@ public class RrdGraphInfo {
         try {
             byte[] content = new byte[stream.available()];
             int read = stream.read(content);
+            System.out.println("Creating graph...(RrdGraphInfo).., size=" + content.length);
             if (read != content.length) {
                 throw new IllegalStateException("Unable to read image buffer");
             }

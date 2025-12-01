@@ -59,12 +59,31 @@ class DataTableModel extends AbstractTableModel {
     /** {@inheritDoc} */
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         assert columnIndex == 2 : "Column " + columnIndex + " is not editable!";
-        double value;
-        try {
-            value = Double.parseDouble(aValue.toString());
-        }
-        catch (NumberFormatException nfe) {
-            value = Double.NaN;
+
+        // System.out.println("\t\t prev=" + getValueAt(rowIndex,columnIndex) );
+        double value; 
+
+        // read: [https://docs.oracle.com/javase/8/docs/api/javax/swing/table/TableModel.html#setValueAt-java.lang.Object-int-int-]
+
+        if        (aValue.toString().endsWith("-") && rowIndex > 0 ) {                // get previous value
+            String tmpValue = getValueAt(rowIndex - 1 , columnIndex).toString();
+            value =  Double.parseDouble(getValueAt(rowIndex - 1 , columnIndex).toString());
+            System.out.println("ptrooms: Pvalue(" + rowIndex + "," + columnIndex + ") " + aValue.toString() + "=" + value );
+        } else if (aValue.toString().endsWith("+") && rowIndex < getRowCount() ) {    // get nextvalue value
+            String tmpValue = getValueAt(rowIndex + 1 , columnIndex).toString();
+            value =  Double.parseDouble(getValueAt(rowIndex + 1 , columnIndex).toString());
+            System.out.println("ptrooms: Nvalue(" + rowIndex + "," + columnIndex + ") " + aValue.toString() + "=" + value );
+        } else if (aValue.toString().endsWith("=") ) {                                // ZeroOut
+            value = 0D;
+            System.out.println("ptrooms: Zvalue(" + rowIndex + "," + columnIndex + ") " + aValue.toString() + "=" + value );
+        } else {
+            // setValueAt((Double) 0D, rowIndex - 1 , columnIndex);
+            try {
+                value = Double.parseDouble(aValue.toString());      // will lead to NaN if not numeric
+            }
+            catch (NumberFormatException nfe) {
+                value = Double.NaN;
+            }
         }
         if (dsIndex >= 0 && arcIndex >= 0 && file != null) {
             try (RrdDb rrd = RrdDb.getBuilder().setPath(file.getAbsolutePath()).build()){

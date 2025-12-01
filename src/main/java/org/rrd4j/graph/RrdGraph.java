@@ -4,7 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Paint;
+import java.awt.Paint;          // located in unzip -l /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar | grep Paint.class
 import java.awt.Stroke;
 import java.io.IOException;
 

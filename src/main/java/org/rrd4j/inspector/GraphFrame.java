@@ -44,7 +44,7 @@ import org.rrd4j.graph.RrdGraphInfo;
 
 class GraphFrame extends JFrame {
     private static final Color COLOR = Color.RED;
-    private static final int WIDTH = 400, HEIGHT = 240;
+    private static final int WIDTH = 400, HEIGHT = 240;     // ptrooms: 22nov25 16u47 widen to allow view
     private int deltaWidth = 0, deltaHeight = 0;
 
     private Color color = COLOR;
@@ -68,7 +68,7 @@ class GraphFrame extends JFrame {
     }
 
     private void createRrdGraph() {
-        System.out.println("Creating graph...");
+        System.out.println("Creating graph...(GraphFrame)..");
         try (RrdDb rrdDb = RrdDb.getBuilder().setPath(sourcePath).readOnly().build()) {
             RrdDef rrdDef;
             long[] timestamps;
