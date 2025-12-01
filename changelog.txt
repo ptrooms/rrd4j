@@ -1,3 +1,15 @@
+Changes in version 3.6 - 31 Mar 2021.
+------------------------------------
+This version is a clone from https://github.com/rrd4j/rrd4j to https://github.com/ptrooms/rrd4j
+branch https://github.com/ptrooms/rrd4j/tree/ptro31mar21
+Modified to allow use for keyboard key in inpector table to fix "NaN" values more easily 
+
+* - copy from previous line
+* + copy from next line
+* = zero
+
+Note: while compiling on Java11 (maven) the output panel (Swing) is lightly formatted differently.
+
 Changes in version 3.5 - 10 Feb 2019.
 ------------------------------------
 
