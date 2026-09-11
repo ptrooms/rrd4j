@@ -116,13 +116,14 @@ public class RrdInspector extends JFrame {
         
         // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
         // KeyStroke resetKey = KeyStroke.getKeyStroke('d', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
-        KeyStroke resetKey  = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0); // Use a safe key like F8
+        KeyStroke resetKey  = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0); // Use a safe key like F7
         KeyStroke resetKey2 = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0); // Use a safe key like F8
         
         String actionKey = "resetSelectedCells" ;	// 20260911 15:08 PtrO
         
         dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey, actionKey);
         dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey2, actionKey);
+        
         // dataTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(resetKey, actionKey); // 20260911 15:32 ptro
 		dataTable.getActionMap().put(actionKey, new AbstractAction() {
 			// System.out.println("ptrooms: dataTable.getActionMap1.") ;
@@ -131,6 +132,10 @@ public class RrdInspector extends JFrame {
 				int[] rows = dataTable.getSelectedRows();
 				int[] cols = dataTable.getSelectedColumns();
 				System.out.println("ptrooms: dataTable.getActionMap2.") ;
+				// int numRow = ;
+
+				System.out.println("ptrooms: change" + dataTable.getSelectedRow() +  "#"  + dataTable.getSelectedRowCount()  ) ;
+				
 				for (int r : rows) {
 					for (int c : cols) {
 						// Check if the individual cell is editable before applying the reset value
