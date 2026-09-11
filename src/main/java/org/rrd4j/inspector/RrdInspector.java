@@ -104,8 +104,10 @@ public class RrdInspector extends JFrame {
         } else {
             loadFile(new File(path));
         }
+        
             
-    		System.out.println("ptrooms: keystrokeset.") ;
+    	System.out.println("ptrooms: keystrokeset.") ;
+    	// 20260911 17:21 get assistance from gemini
         // KeyStroke resetKey = KeyStroke.getKeyStr("DELETE"); // 20260911 14:49 PtrO
         // KeyStroke resetKey = KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO
         // 'a', java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK
