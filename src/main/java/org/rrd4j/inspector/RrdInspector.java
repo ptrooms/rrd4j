@@ -119,8 +119,8 @@ public class RrdInspector extends JFrame {
         
         String actionKey = "resetSelectedCells" + resetKey ;	// 20260911 15:08 PtrO
         
-        // dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey, actionKey);
-        dataTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(resetKey, actionKey); // 20260911 15:32 ptro
+        dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey, actionKey);
+        // dataTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(resetKey, actionKey); // 20260911 15:32 ptro
 		dataTable.getActionMap().put(actionKey, new AbstractAction() {
 			// System.out.println("ptrooms: dataTable.getActionMap1.") ;
 			@Override
