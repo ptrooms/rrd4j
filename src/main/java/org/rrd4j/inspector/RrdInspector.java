@@ -36,6 +36,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import javax.swing.AbstractAction;		// 20260911 14:52 PtrO
+import javax.swing.JComponent;		// 20260911 14:52 PtrO
+import javax.swing.KeyStroke;		// 20260911 14:52 PtrO
+// import javax.swing.getKeyStr;		// 20260911 14:52 PtrO
+
+
 import org.rrd4j.ConsolFun;
 import org.rrd4j.core.ArcDef;
 import org.rrd4j.core.DsDef;
@@ -54,7 +60,7 @@ public class RrdInspector extends JFrame {
     static final Dimension INFO_PANE_SIZE = new Dimension(450, 400);
 
     static final String ABOUT = "RRD4J\nRRD File Inspector\n" +
-            "Copyright (c) 2021-25 Peter Ooms, Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group,  Inc. Licensed under the Apache License, Version 2.0. ";
+            "Copyright (c) 2021-26 Peter Ooms, Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group,  Inc. Licensed under the Apache License, Version 2.0. ";
     private static final String JSCROLL_BAR_FAST_WHEEL_SCROLLING = "JScrollBar.fastWheelScrolling";
     private static final String OPEN_A_VALID_RRD_FILE_FIRST = "Open a valid RRD file first.";
     private static final String SELECT_ARCHIVE_FIRST = "Select archive first";
@@ -66,6 +72,7 @@ public class RrdInspector extends JFrame {
     private JTable datasourceTable = new JTable();
     private JTable archiveTable = new JTable();
     private JTable dataTable = new JTable();
+
 
     private InspectorModel inspectorModel = new InspectorModel();
 
@@ -97,6 +104,42 @@ public class RrdInspector extends JFrame {
         } else {
             loadFile(new File(path));
         }
+            
+    		System.out.println("ptrooms: keystrokeset.") ;
+        // KeyStroke resetKey = KeyStroke.getKeyStr("DELETE"); // 20260911 14:49 PtrO
+        // KeyStroke resetKey = KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO
+        // 'a', java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl|Shift-Z
+        
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
+        KeyStroke resetKey = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0); // Use a safe key like F8
+        
+        String actionKey = "resetSelectedCells" + resetKey ;	// 20260911 15:08 PtrO
+        
+        // dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey, actionKey);
+        dataTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(resetKey, actionKey); // 20260911 15:32 ptro
+		dataTable.getActionMap().put(actionKey, new AbstractAction() {
+			// System.out.println("ptrooms: dataTable.getActionMap1.") ;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int[] rows = dataTable.getSelectedRows();
+				int[] cols = dataTable.getSelectedColumns();
+				System.out.println("ptrooms: dataTable.getActionMap2.") ;
+				for (int r : rows) {
+					for (int c : cols) {
+						// Check if the individual cell is editable before applying the reset value
+						if (dataTable.isCellEditable(r, c)) {
+							// Set to your predefined value, e.g., "NaN" or a numeric string
+							dataTable.setValueAt("NaN", r, c);
+						}
+					}
+				}
+				// Force the table to refresh its view
+				dataTable.repaint();
+			}
+		});
+
     }
 
     /*
@@ -193,8 +236,9 @@ public class RrdInspector extends JFrame {
                 setBackground(Color.YELLOW);
             }
         });
+
         spData.setPreferredSize(INFO_PANE_SIZE);
-        tabbedPane.add("Archive data", spData);
+        tabbedPane.add("Archive data", spData);	
 
         splitPane.setRightComponent(tabbedPane);
         content.add(splitPane, BorderLayout.CENTER);
