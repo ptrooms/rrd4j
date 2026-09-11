@@ -115,11 +115,14 @@ public class RrdInspector extends JFrame {
         // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl|Shift-Z
         
         // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
-        KeyStroke resetKey = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0); // Use a safe key like F8
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('d', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
+        KeyStroke resetKey  = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0); // Use a safe key like F8
+        KeyStroke resetKey2 = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0); // Use a safe key like F8
         
-        String actionKey = "resetSelectedCells" + resetKey ;	// 20260911 15:08 PtrO
+        String actionKey = "resetSelectedCells" ;	// 20260911 15:08 PtrO
         
         dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey, actionKey);
+        dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey2, actionKey);
         // dataTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(resetKey, actionKey); // 20260911 15:32 ptro
 		dataTable.getActionMap().put(actionKey, new AbstractAction() {
 			// System.out.println("ptrooms: dataTable.getActionMap1.") ;
