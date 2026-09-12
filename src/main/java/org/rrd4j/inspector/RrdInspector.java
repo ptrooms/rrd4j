@@ -36,6 +36,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import javax.swing.AbstractAction;        // 20260911 14:52 PtrO
+import javax.swing.JComponent;        // 20260911 14:52 PtrO
+import javax.swing.KeyStroke;        // 20260911 14:52 PtrO
+// import javax.swing.getKeyStr;        // 20260911 14:52 PtrO
+
+
 import org.rrd4j.ConsolFun;
 import org.rrd4j.core.ArcDef;
 import org.rrd4j.core.DsDef;
@@ -54,7 +60,7 @@ public class RrdInspector extends JFrame {
     static final Dimension INFO_PANE_SIZE = new Dimension(450, 400);
 
     static final String ABOUT = "RRD4J\nRRD File Inspector\n" +
-            "Copyright (c) 2021-25 Peter Ooms, Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group,  Inc. Licensed under the Apache License, Version 2.0. ";
+            "Copyright (c) 2021-26 Peter Ooms, Copyright (c) 2013 The RRD4J Authors. Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor. Copyright (c) 2013 The OpenNMS Group,  Inc. Licensed under the Apache License, Version 2.0. ";
     private static final String JSCROLL_BAR_FAST_WHEEL_SCROLLING = "JScrollBar.fastWheelScrolling";
     private static final String OPEN_A_VALID_RRD_FILE_FIRST = "Open a valid RRD file first.";
     private static final String SELECT_ARCHIVE_FIRST = "Select archive first";
@@ -66,6 +72,7 @@ public class RrdInspector extends JFrame {
     private JTable datasourceTable = new JTable();
     private JTable archiveTable = new JTable();
     private JTable dataTable = new JTable();
+
 
     private InspectorModel inspectorModel = new InspectorModel();
 
@@ -97,6 +104,109 @@ public class RrdInspector extends JFrame {
         } else {
             loadFile(new File(path));
         }
+        
+            
+        System.out.println("ptrooms: keystrokeset.") ;
+        // 20260911 17:21 get assistance from gemini
+        // KeyStroke resetKey = KeyStroke.getKeyStr("DELETE"); // 20260911 14:49 PtrO
+        // KeyStroke resetKey = KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO
+        // 'a', java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.SHIFT_DOWN_MASK
+        //                         | java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.SHIFT_DOWN_MASK 
+        //                        | java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl|Shift-Z
+        
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('z', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
+        // KeyStroke resetKey = KeyStroke.getKeyStroke('d', java.awt.event.InputEvent.CTRL_DOWN_MASK); // 20260911 14:49 PtrO Ctrl-Z
+        // KeyEvent 112-123=F1-12,  48-57=0-9,   65-90=A-Z
+        KeyStroke resetKey1  = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0); // Use a safe key like F7
+        KeyStroke resetKey2  = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0); // Use a safe key like F8
+        
+        String actionKey1 = "resetSelectedCell1" ;    // 20260911 15:08 PtrO take-1 propagate forward
+        String actionKey2 = "resetSelectedCell2" ;    // 20260911 15:08 PtrO take+1 propagate backward
+        
+        dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey1, actionKey1);
+        dataTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(resetKey2, actionKey2);
+        
+        // dataTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(resetKey, actionKey); // 20260911 15:32 ptro
+        
+        // AbstractAction() - Creates an Action.
+        // AbstractAction(String name) - Creates an Action with the specified name.
+        // AbstractAction(String name, Icon icon) - Creates an Action with the specified name and small icon.
+        
+        
+    /*
+       if        (aValue.toString().endsWith("-") && rowIndex > 0 ) {                // get previous value
+            String tmpValue = getValueAt(rowIndex - 1 , columnIndex).toString();
+            value =  Double.parseDouble(getValueAt(rowIndex - 1 , columnIndex).toString());
+            System.out.println("ptrooms: Pvalue(" + rowIndex + "," + columnIndex + ") " + aValue.toString() + "=" + value );
+        } else if (aValue.toString().endsWith("+") && rowIndex < getRowCount() ) {    // get nextvalue value
+            String tmpValue = getValueAt(rowIndex + 1 , columnIndex).toString();
+            value =  Double.parseDouble(getValueAt(rowIndex + 1 , columnIndex).toString());
+    */
+        dataTable.getActionMap().put(actionKey1, new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    int[] rows = dataTable.getSelectedRows();
+                    int[] cols = dataTable.getSelectedColumns();
+                    // ptrooms: change1= length=4 Rowcount=720 start=43 number=4
+                    System.out.println("ptrooms: change1=Previous"
+                                + " length="   + rows.length
+                                + " Rowcount=" + dataTable.getRowCount()
+                                + " start="    + dataTable.getSelectedRow() 
+                                + " number="   + dataTable.getSelectedRowCount()  ) ;
+                    if ( dataTable.getSelectedRow() > 0 && dataTable.getSelectedRow() < dataTable.getRowCount() ) { 
+                        // String tmpValue = getValueAt(rowIndex + 1 , columnIndex).toString();
+                        for (int r : rows) {
+                            for (int c : cols) {
+                                // Check if the individual cell is editable before applying the reset value
+                                if (dataTable.isCellEditable(r, c)) {
+                                    double setValue = Double.parseDouble(dataTable.getValueAt( r - 1 , c).toString());
+                                    // Set to your predefined value, e.g., "NaN" or a numeric string
+                                    // dataTable.setValueAt("NaN", r, c);
+                                    dataTable.setValueAt(setValue, r, c);
+                                }
+                            }
+                        }
+                    }
+                    // Force the table to refresh its view
+                    dataTable.repaint();
+                }
+            }
+        ); // end of getActionMap()
+        dataTable.getActionMap().put(actionKey2, new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                     int[] rows = dataTable.getSelectedRows();
+                     int[] cols = dataTable.getSelectedColumns();
+                    // ptrooms: change1= length=4 Rowcount=720 start=43 number=4
+                    System.out.println("ptrooms: change2=clear"
+                                + " length="   + rows.length
+                                + " Rowcount=" + dataTable.getRowCount()
+                                + " start="    + dataTable.getSelectedRow() 
+                                + " number="   + dataTable.getSelectedRowCount()  ) ;
+                    if ( dataTable.getSelectedRow() >= 0 && dataTable.getSelectedRow() <= dataTable.getRowCount() ) { 
+                        // String tmpValue = getValueAt(rowIndex + 1 , columnIndex).toString();
+                        for (int r : rows) {
+                            for (int c : cols) {
+                                // Check if the individual cell is editable before applying the reset value
+                                if (dataTable.isCellEditable(r, c)) {
+                                    // double setValue = Double.parseDouble(dataTable.getValueAt( r - 1 , c).toString());
+                                    // Set to your predefined value, e.g., "NaN" or a numeric string
+                                    dataTable.setValueAt("NaN", r, c);
+                                    // dataTable.setValueAt(setValue, r, c);
+                                }
+                            }
+                        }
+                    }
+                    // Force the table to refresh its view
+                    dataTable.repaint();
+                }
+            }
+        ); // end of getActionMap() : 2
+
+
+
     }
 
     /*
@@ -193,8 +303,9 @@ public class RrdInspector extends JFrame {
                 setBackground(Color.YELLOW);
             }
         });
+
         spData.setPreferredSize(INFO_PANE_SIZE);
-        tabbedPane.add("Archive data", spData);
+        tabbedPane.add("Archive data", spData);    
 
         splitPane.setRightComponent(tabbedPane);
         content.add(splitPane, BorderLayout.CENTER);
@@ -622,10 +733,10 @@ public class RrdInspector extends JFrame {
                     UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
                     
 /* Does not work
-	
-					UIManager.put("Label.font", new setLookAndFeel(new Font("Dialog", Font.PLAIN, 10)));
-					// UIManager.put("Button.font", new FontUIResource(new Font("Dialog", Font.BOLD, 10)));
-					// UIManager.put("TextField.font", new FontUIResource(new Font("Dialog", Font.PLAIN, 10)));
+    
+                    UIManager.put("Label.font", new setLookAndFeel(new Font("Dialog", Font.PLAIN, 10)));
+                    // UIManager.put("Button.font", new FontUIResource(new Font("Dialog", Font.BOLD, 10)));
+                    // UIManager.put("TextField.font", new FontUIResource(new Font("Dialog", Font.PLAIN, 10)));
 */
 
                 } catch (Exception e1) {
